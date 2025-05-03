@@ -16,17 +16,18 @@ const createPatient = async (patientData) => {
 
 const findPatientByUserId = async (userId) => {
   try {
+    console.log('findPatientByUserId: Start');
     if (!userId) {
       throw new Error('User ID is required');
     }
-    console.log('Finding patient by user ID:', userId);
+    console.log('findPatientByUserId: Finding patient by user ID:', userId);
     const patient = await Patient.findOne({ user: userId })
       .populate('user', '-password')
       .populate('doctors', 'fullName specialization');
-    console.log('Patient found:', patient ? patient._id : 'none');
+    console.log('findPatientByUserId: Patient found:', patient ? patient._id : 'none');
     return patient;
   } catch (error) {
-    console.error('Error finding patient by user ID:', error);
+    console.error('findPatientByUserId: Error:', error);
     throw error;
   }
 };

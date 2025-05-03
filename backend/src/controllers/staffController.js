@@ -14,19 +14,18 @@ const {
   updatePatientDetails,
   createNewPatient,
   deletePatientById,
-  getAppointmentDetails,
+  getPatientByUserId,
   getUpcomingAppointments,
-  updateAppointmentDetails,
   createNewAppointment,
+  getAppointmentDetails,
+  updateAppointmentDetails,
   deleteAppointmentById,
 } = require('../services/staffService');
 
-// Import the getAllDoctors function from the doctorService
 const { getAllDoctors } = require('../services/doctorService');
 
 const { responseFormatter } = require('../utils/responseFormatter');
 
-// Staff Profile Controllers
 const getProfile = async (req, res, next) => {
   try {
     if (req.staffProfile) {
@@ -82,7 +81,6 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
-// NEW FUNCTION: Add the doctor controller function
 const getDoctors = async (req, res, next) => {
   try {
     const doctors = await getAllDoctors();
@@ -95,7 +93,6 @@ const getDoctors = async (req, res, next) => {
   }
 };
 
-// Patient Controllers
 const getPatients = async (req, res, next) => {
   try {
     const patients = await getAllPatients();
@@ -122,17 +119,34 @@ const getPatient = async (req, res, next) => {
 
 const createPatient = async (req, res, next) => {
   try {
-    // Add user field from authenticated user to patient data
+    console.log('createPatient: Start');
+    console.log('createPatient: Checking existing patient');
+    const existingPatient = await getPatientByUserId(req.user.id);
+    console.log('createPatient: Existing patient:', existingPatient);
+
     const patientData = {
       ...req.body,
       user: req.user.id
     };
-    const patient = await createNewPatient(patientData);
-    res.status(201).json(responseFormatter({
+
+    let patient;
+    if (existingPatient) {
+      console.log('createPatient: Updating existing patient');
+      patient = await updatePatientDetails(existingPatient._id, patientData);
+      console.log('createPatient: Updated patient:', patient);
+    } else {
+      console.log('createPatient: Creating new patient');
+      patient = await createNewPatient(patientData);
+      console.log('createPatient: Created patient:', patient);
+    }
+
+    res.status(existingPatient ? 200 : 201).json(responseFormatter({
       status: 'success',
       data: patient,
     }));
+    console.log('createPatient: Response sent');
   } catch (err) {
+    console.error('createPatient: Error:', err);
     next(err);
   }
 };
@@ -162,7 +176,6 @@ const deletePatient = async (req, res, next) => {
   }
 };
 
-// Transaction Controllers
 const createTransaction = async (req, res, next) => {
   try {
     const staffId = req.staffProfile ? req.staffProfile._id : req.user.id;
@@ -241,7 +254,6 @@ const getPatientTransactionHistory = async (req, res, next) => {
   }
 };
 
-// Appointment Controllers
 const getAppointment = async (req, res, next) => {
   try {
     const appointment = await getAppointmentDetails(req.params.id);
@@ -256,12 +268,15 @@ const getAppointment = async (req, res, next) => {
 
 const createAppointment = async (req, res, next) => {
   try {
+    console.log('Creating appointment with data:', req.body);
     const appointment = await createNewAppointment(req.body);
+    console.log('Created appointment:', appointment);
     res.status(201).json(responseFormatter({
       status: 'success',
       data: appointment,
     }));
   } catch (err) {
+    console.error('Error creating appointment:', err);
     next(err);
   }
 };
@@ -324,5 +339,5 @@ module.exports = {
   fetchUpcomingAppointments,
   updateAppointment,
   deleteAppointment,
-  getDoctors, // Export the new function
+  getDoctors,
 };

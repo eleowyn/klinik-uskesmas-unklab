@@ -38,14 +38,14 @@ const PatientManagement = () => {
     }
   };
 
-  const filteredPatients = patients.filter(patient => {
-    const matchesSearch = 
-      patient.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient.phone?.includes(searchTerm);
-    const matchesFilter = filterGender === 'all' || patient.gender === filterGender;
-    return matchesSearch && matchesFilter;
-  });
+    const filteredPatients = patients.filter(patient => {
+      const matchesSearch = 
+        patient.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.phoneNumber?.includes(searchTerm);
+      const matchesFilter = filterGender === 'all' || patient.gender === filterGender;
+      return matchesSearch && matchesFilter;
+    });
 
   if (loading) {
     return (
@@ -113,7 +113,7 @@ const PatientManagement = () => {
                       </span>
                       <span>
                         <i className="fas fa-phone mr-1"></i>
-                        {patient.phone}
+                        {patient.phoneNumber}
                       </span>
                       <span>
                         <i className="fas fa-calendar mr-1"></i>
@@ -127,14 +127,23 @@ const PatientManagement = () => {
                   </div>
                   <div className="flex items-center gap-4">
                     <Link
+                      to={`/staff/patients/${patient._id}`}
+                      className="text-green-500 hover:text-green-600"
+                      title="View Details"
+                    >
+                      <i className="fas fa-eye"></i>
+                    </Link>
+                    <Link
                       to={`/staff/patients/${patient._id}/edit`}
                       className="text-blue-500 hover:text-blue-600"
+                      title="Edit"
                     >
                       <i className="fas fa-edit"></i>
                     </Link>
                     <button
                       onClick={() => handleDelete(patient._id)}
                       className="text-red-500 hover:text-red-600"
+                      title="Delete"
                     >
                       <i className="fas fa-trash"></i>
                     </button>

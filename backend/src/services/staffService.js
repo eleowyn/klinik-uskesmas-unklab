@@ -2,6 +2,7 @@ const Staff = require('../models/Staff');
 const Patient = require('../models/Patient');
 const Transaction = require('../models/Transaction');
 const Appointment = require('../models/Appointment');
+const patientRepository = require('../repositories/patientRepository');
 
 class StaffService {
   // Staff Profile Management
@@ -191,6 +192,26 @@ class StaffService {
     }
   }
 
+  async updateTransactionDetails(transactionId, updateData) {
+    try {
+      const transaction = await Transaction.findByIdAndUpdate(
+        transactionId,
+        { $set: updateData },
+        { new: true, runValidators: true }
+      ).populate('patient', 'fullName')
+        .populate('staff', 'fullName');
+
+      if (!transaction) {
+        throw new Error('Transaction not found');
+      }
+
+      return transaction;
+    } catch (error) {
+      console.error('Error in updateTransactionDetails:', error);
+      throw error;
+    }
+  }
+
   // Appointment Management
   async getUpcomingAppointments() {
     try {
@@ -260,6 +281,16 @@ class StaffService {
     } catch (error) {
       console.error('Error in updateAppointmentDetails:', error);
       throw error;
+    }
+  }
+
+  async getPatientByUserId(userId) {
+    try {
+    const patient = await patientRepository.findPatientByUserId(userId);
+    return patient;
+    } catch (error) {
+    console.error('Error in getPatientByUserId:', error);
+    throw error;
     }
   }
 }

@@ -68,26 +68,35 @@ const AppointmentForm = () => {
     setLoading(true);
 
     try {
+      // Format the date to ISO string
+      const appointmentDate = new Date(formData.appointmentDate);
+      appointmentDate.setHours(0, 0, 0, 0); // Reset time part
+
       const data = {
         patient: formData.patientId,
         doctor: formData.doctorId,
-        date: formData.appointmentDate,
+        date: appointmentDate.toISOString(),
         time: formData.appointmentTime,
         reason: formData.reason,
-        status: formData.status,
+        status: formData.status || 'scheduled',
         notes: formData.notes
       };
 
+      console.log('Submitting appointment data:', data);
+
       if (id) {
-        await updateAppointment(id, data);
+        const updatedAppointment = await updateAppointment(id, data);
+        console.log('Updated appointment:', updatedAppointment);
         showAlert('Appointment updated successfully', 'success');
       } else {
-        await createAppointment(data);
+        const newAppointment = await createAppointment(data);
+        console.log('Created appointment:', newAppointment);
         showAlert('Appointment created successfully', 'success');
       }
       navigate('/staff/appointments');
     } catch (err) {
-      showAlert(err.message, 'error');
+      console.error('Error submitting appointment:', err);
+      showAlert(err.message || 'Failed to save appointment', 'error');
     } finally {
       setLoading(false);
     }

@@ -11,7 +11,7 @@ import PatientPortal from './pages/PatientPortal';
 // Doctor Components
 import DoctorDashboard from './components/doctor/DoctorDashboard';
 import PatientList from './components/doctor/PatientList';
-import PatientDetails from './components/doctor/PatientDetails';
+import DoctorPatientDetails from './components/doctor/PatientDetails';
 import PrescriptionForm from './components/doctor/PrescriptionForm';
 import PrescriptionList from './components/doctor/PrescriptionList';
 import Schedule from './components/doctor/Schedule';
@@ -20,6 +20,7 @@ import Schedule from './components/doctor/Schedule';
 import StaffDashboard from './components/staff/StaffDashboard';
 import PatientManagement from './components/staff/PatientManagement';
 import PatientForm from './components/staff/PatientForm';
+import StaffPatientDetails from './components/staff/PatientDetails';
 import TransactionForm from './components/staff/TransactionForm';
 import TransactionManagement from './components/staff/TransactionManagement';
 import TransactionDetail from './components/staff/TransactionDetail';
@@ -67,7 +68,7 @@ const routes = [
       },
       {
         path: 'patients/:id',
-        element: <PatientDetails />
+        element: <DoctorPatientDetails />
       },
       {
         path: 'prescriptions',
@@ -106,6 +107,10 @@ const routes = [
       {
         path: 'patients/new',
         element: <PatientForm />
+      },
+      {
+        path: 'patients/:id',
+        element: <StaffPatientDetails />
       },
       {
         path: 'patients/:id/edit',

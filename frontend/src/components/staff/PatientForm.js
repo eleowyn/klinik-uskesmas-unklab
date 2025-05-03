@@ -11,7 +11,7 @@ const PatientForm = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    phone: '',
+    phoneNumber: '',
     dateOfBirth: '',
     gender: '',
     address: {
@@ -151,14 +151,14 @@ const PatientForm = () => {
             </div>
 
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="phone">
+              <label className="block text-gray-700 mb-2" htmlFor="phoneNumber">
                 Phone *
               </label>
               <input
                 type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
+                id="phoneNumber"
+                name="phoneNumber"
+                value={formData.phoneNumber}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
@@ -216,6 +216,7 @@ const PatientForm = () => {
                 value={formData.address.street}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
             </div>
 
@@ -230,6 +231,7 @@ const PatientForm = () => {
                 value={formData.address.city}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
             </div>
 
@@ -244,6 +246,7 @@ const PatientForm = () => {
                 value={formData.address.state}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
             </div>
 
@@ -258,6 +261,7 @@ const PatientForm = () => {
                 value={formData.address.zipCode}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
               />
             </div>
           </div>

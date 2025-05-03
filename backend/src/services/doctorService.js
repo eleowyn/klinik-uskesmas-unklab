@@ -235,6 +235,19 @@ class DoctorService {
       throw error;
     }
   }
+
+  // New method to get all doctors
+  async getAllDoctors() {
+    try {
+      const doctors = await Doctor.find()
+        .populate('user', '-password')
+        .sort({ fullName: 1 });
+      return doctors;
+    } catch (error) {
+      console.error('Error in getAllDoctors:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new DoctorService();
