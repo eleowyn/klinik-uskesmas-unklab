@@ -1,50 +1,83 @@
-/**
- * Role-based access control middleware
- * Verifies user has required role and profile
- * @param {string[]} allowedRoles - Array of roles allowed to access the route
- */
+const { responseFormatter } = require('../utils/responseFormatter');
+const Doctor = require('../models/Doctor');
+const Staff = require('../models/Staff');
+const Patient = require('../models/Patient');
+
 const roleCheck = (allowedRoles) => {
   return async (req, res, next) => {
     try {
-      console.log('Role Check - Request URL:', req.originalUrl);
-      console.log('Role Check - Allowed Roles:', allowedRoles);
-      console.log('Role Check - User:', {
-        id: req.user?.id,
-        role: req.user?.role,
-        hasProfile: !!req[`${req.user?.role}Profile`]
-      });
-
-      // Check if user exists and has a role
-      if (!req.user || !req.user.role) {
-        throw new Error('User role not found');
+      if (!req.user) {
+        return res.status(401).json(responseFormatter({
+          status: 'error',
+          message: 'Authentication required'
+        }));
       }
 
-      // Check if user's role is allowed
       if (!allowedRoles.includes(req.user.role)) {
-        throw new Error('Access denied: insufficient role permissions');
+        return res.status(403).json(responseFormatter({
+          status: 'error',
+          message: 'Access denied'
+        }));
       }
 
-      // Check if user has required profile
-      const profileKey = `${req.user.role}Profile`;
-      if (!req[profileKey]) {
-        throw new Error(`${req.user.role} profile not found`);
+      // Attach role-specific profile to request
+      switch (req.user.role) {
+        case 'doctor':
+          const doctorProfile = await Doctor.findOne({ user: req.user.id });
+          if (!doctorProfile) {
+            return res.status(404).json(responseFormatter({
+              status: 'error',
+              message: 'Doctor profile not found'
+            }));
+          }
+          req.doctorProfile = doctorProfile;
+          break;
+
+        case 'staff':
+          const staffProfile = await Staff.findOne({ user: req.user.id });
+          if (!staffProfile) {
+            return res.status(404).json(responseFormatter({
+              status: 'error',
+              message: 'Staff profile not found'
+            }));
+          }
+          req.staffProfile = staffProfile;
+          break;
+
+        case 'patient':
+          const patientProfile = await Patient.findOne({ user: req.user.id });
+          if (!patientProfile) {
+            return res.status(404).json(responseFormatter({
+              status: 'error',
+              message: 'Patient profile not found'
+            }));
+          }
+          req.patientProfile = patientProfile;
+          break;
+
+        default:
+          return res.status(403).json(responseFormatter({
+            status: 'error',
+            message: 'Invalid role'
+          }));
       }
 
-      // Log success
-      console.log('Role Check - Success:', {
+      // Add debug logging
+      console.log('Role Check -', {
+        userId: req.user.id,
         role: req.user.role,
-        hasProfile: true,
-        profileId: req[profileKey]._id
+        allowedRoles,
+        path: req.path,
+        method: req.method
       });
 
       next();
     } catch (error) {
-      console.error('Role Check - Error:', error.message);
-      res.status(403).json({
+      console.error('Role Check Error:', error);
+      res.status(500).json(responseFormatter({
         status: 'error',
-        message: 'Access denied',
-        error: error.message
-      });
+        message: 'Role check failed'
+      }));
     }
   };
 };

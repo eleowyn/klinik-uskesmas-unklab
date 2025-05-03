@@ -1,279 +1,166 @@
-import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
-import { AlertContext } from '../../context/AlertContext';
+import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useAlert } from '../../context/AlertContext';
 
 const RegisterForm = () => {
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: '',
-    password_confirmation: '',
-    role: 'doctor', // Default role
-    fullName: '',
-    gender: 'male',
-    NO_SIP: '',
-    specialization: '',
-    address: '',
-    noTelp: '',
+    role: 'patient', // default role
+    name: '',
+    phone: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const { register } = useContext(AuthContext);
-  const { showAlert } = useContext(AlertContext);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const { 
-    username, email, password, password_confirmation, role,
-    fullName, gender, NO_SIP, specialization, address, noTelp
-  } = formData;
+  const { register } = useAuth();
+  const { showAlert } = useAlert();
 
-  const onChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
-  const validateForm = () => {
-    if (password !== password_confirmation) {
-      showAlert('Passwords do not match', 'error');
-      return false;
-    }
-
-    if (role === 'doctor') {
-      if (!NO_SIP) {
-        showAlert('NO_SIP is required for doctor registration', 'error');
-        return false;
-      }
-      if (!specialization) {
-        showAlert('Specialization is required for doctor registration', 'error');
-        return false;
-      }
-    }
-
-    if (role === 'staff' && !email.includes('staff')) {
-      showAlert('Staff email must contain "staff"', 'error');
-      return false;
-    }
-
-    return true;
-  };
-
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    setLoading(true);
 
-    setIsLoading(true);
-    // Remove password_confirmation before sending to API
-    const { password_confirmation: pwdConfirm, ...registerData } = formData;
-    const result = await register(registerData);
-    setIsLoading(false);
-
-    if (result.success) {
-      showAlert('Registration successful!', 'success');
-      navigate('/dashboard');
-    } else {
-      showAlert(result.error, 'error');
+    try {
+      await register(formData);
+    } catch (error) {
+      showAlert(error.message || 'Registration failed', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-      <h2 className="text-2xl font-bold text-center mb-6">Create an Account</h2>
-      <form onSubmit={onSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-            Username
-          </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="username"
-            type="text"
-            name="username"
-            value={username}
-            onChange={onChange}
-            required
-          />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-400 to-green-400 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-lg">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Create your account
+          </h2>
         </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-            Email {role === 'staff' && <span className="text-sm text-gray-500">(must contain "staff")</span>}
-          </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="email"
-            type="email"
-            name="email"
-            value={email}
-            onChange={onChange}
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fullName">
-            Full Name
-          </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="fullName"
-            type="text"
-            name="fullName"
-            value={fullName}
-            onChange={onChange}
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="gender">
-            Gender
-          </label>
-          <select
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="gender"
-            name="gender"
-            value={gender}
-            onChange={onChange}
-            required
-          >
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="role">
-            Register as
-          </label>
-          <select
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="role"
-            name="role"
-            value={role}
-            onChange={onChange}
-            required
-          >
-            <option value="doctor">Doctor</option>
-            <option value="staff">Staff</option>
-          </select>
-        </div>
-
-        {role === 'doctor' && (
-          <>
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="NO_SIP">
-                NO_SIP *
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email address
               </label>
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="NO_SIP"
-                type="text"
-                name="NO_SIP"
-                value={NO_SIP}
-                onChange={onChange}
+                id="email"
+                name="email"
+                type="email"
                 required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleChange}
               />
             </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="specialization">
-                Specialization *
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
               </label>
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="specialization"
-                type="text"
-                name="specialization"
-                value={specialization}
-                onChange={onChange}
+                id="password"
+                name="password"
+                type="password"
                 required
+                minLength={6}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
               />
             </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="address">
-                Address *
+            <div>
+              <label htmlFor="role" className="sr-only">
+                Role
+              </label>
+              <select
+                id="role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+              >
+                <option value="patient">Patient</option>
+                <option value="doctor">Doctor</option>
+                <option value="staff">Staff</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="name" className="sr-only">
+                Full Name
               </label>
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="address"
+                id="name"
+                name="name"
                 type="text"
-                name="address"
-                value={address}
-                onChange={onChange}
-                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                placeholder="Full Name (optional)"
+                value={formData.name}
+                onChange={handleChange}
               />
             </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="noTelp">
-                Phone Number *
+            <div>
+              <label htmlFor="phone" className="sr-only">
+                Phone Number
               </label>
               <input
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                id="noTelp"
+                id="phone"
+                name="phone"
                 type="tel"
-                name="noTelp"
-                value={noTelp}
-                onChange={onChange}
-                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm"
+                placeholder="Phone Number (optional)"
+                value={formData.phone}
+                onChange={handleChange}
               />
             </div>
-          </>
-        )}
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-            Password
-          </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="password"
-            type="password"
-            name="password"
-            value={password}
-            onChange={onChange}
-            required
-          />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password_confirmation">
-            Confirm Password
-          </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="password_confirmation"
-            type="password"
-            name="password_confirmation"
-            value={password_confirmation}
-            onChange={onChange}
-            required
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
-            type="submit"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Processing...' : 'Register'}
-          </button>
-        </div>
-
-        <div className="text-center mt-4">
-          <p>
-            Already have an account?{' '}
-            <Link to="/login" className="text-blue-500 hover:text-blue-700">
-              Login
-            </Link>
-          </p>
-        </div>
-      </form>
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                loading
+                  ? 'bg-green-400 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
+            >
+              {loading ? (
+                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </span>
+              ) : null}
+              {loading ? 'Registering...' : 'Register'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

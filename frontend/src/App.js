@@ -1,45 +1,34 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useRoutes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { AlertProvider } from './context/AlertContext';
-import routes from './routes';
+import { DoctorProvider } from './context/DoctorContext';
+import { StaffProvider } from './context/StaffContext';
 import Alert from './components/common/Alert';
-import Header from './components/common/Header';
-import Footer from './components/common/Footer';
-import './styles/index.css';
+import routes from './routes';
 
-function renderRoutes(routes) {
-  return routes.map(({ path, element, children }, index) => {
-    if (children) {
-      return (
-        <Route key={index} path={path} element={element}>
-          {renderRoutes(children)}
-        </Route>
-      );
-    }
-    return <Route key={index} path={path} element={element} />;
-  });
-}
+const AppRoutes = () => {
+  const routeElements = useRoutes(routes);
+  return routeElements;
+};
 
-function App() {
+const App = () => {
   return (
     <Router>
-      <AuthProvider>
-        <AlertProvider>
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-grow">
-              <Alert />
-              <Routes>
-                {renderRoutes(routes)}
-              </Routes>
-            </main>
-            <Footer />
-          </div>
-        </AlertProvider>
-      </AuthProvider>
+      <AlertProvider>
+        <AuthProvider>
+          <DoctorProvider>
+            <StaffProvider>
+              <div className="min-h-screen bg-gray-50">
+                <Alert />
+                <AppRoutes />
+              </div>
+            </StaffProvider>
+          </DoctorProvider>
+        </AuthProvider>
+      </AlertProvider>
     </Router>
   );
-}
+};
 
 export default App;

@@ -1,81 +1,83 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
-const Sidebar = ({ title, navLinks = [], user, onLogout }) => {
-  const location = useLocation();
+const Sidebar = ({ title, navLinks, user, onClose }) => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
-  let sidebarLinks = [...navLinks];
-
-  // Add transactions and appointments links if user is staff
-  if (user && user.role === 'staff') {
-    const extraLinks = [
-      { path: '/staff/transactions', label: 'Transactions', icon: 'fas fa-receipt' },
-      { path: '/staff/appointments', label: 'Appointments', icon: 'fas fa-calendar-alt' },
-    ];
-    // Prevent duplicates
-    const existingPaths = sidebarLinks.map(link => link.path);
-    const filteredExtraLinks = extraLinks.filter(link => !existingPaths.includes(link.path));
-    sidebarLinks = [...sidebarLinks, ...filteredExtraLinks];
-  }
-
-  // Add doctor-specific links
-  if (user && user.role === 'doctor') {
-    const doctorLinks = [
-      { path: '/doctor/appointments', label: 'My Appointments', icon: 'fas fa-calendar-check' },
-      { path: '/doctor/patients', label: 'Patients', icon: 'fas fa-user-injured' },
-      { path: '/doctor/prescriptions', label: 'Prescriptions', icon: 'fas fa-prescription' }
-    ];
-    // Prevent duplicates
-    const existingPaths = sidebarLinks.map(link => link.path);
-    const filteredDoctorLinks = doctorLinks.filter(link => !existingPaths.includes(link.path));
-    sidebarLinks = [...sidebarLinks, ...filteredDoctorLinks];
-  }
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
-    <div className="w-64 min-h-screen bg-blue-900 text-white">
-      <div className="p-6">
-        <h2 className="text-2xl font-bold mb-6">{title}</h2>
-        
+    <div className="w-64 h-full bg-white shadow-lg flex flex-col">
+      {/* Header */}
+      <div className="p-6 border-b">
+        <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
         {user && (
-          <div className="mb-6 pb-6 border-b border-blue-800">
-            <p className="text-sm text-blue-300">Welcome,</p>
-            <p className="font-semibold">{user.fullName || user.username}</p>
+          <div className="mt-4">
+            <div className="flex items-center">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                {user.profile?.fullName?.charAt(0) || user.email?.charAt(0)}
+              </div>
+              <div className="ml-3">
+                <p className="font-medium text-gray-800">
+                  {user.profile?.fullName || user.email}
+                </p>
+                <p className="text-sm text-gray-500 capitalize">
+                  {user.role}
+                </p>
+              </div>
+            </div>
           </div>
         )}
-
-        <nav>
-          <ul className="space-y-2">
-            {sidebarLinks.map((link) => {
-              const isActive = location.pathname.includes(link.path);
-              return (
-                <li key={link.path}>
-                  <Link
-                    to={link.path}
-                    className={`flex items-center p-3 rounded-lg transition-colors ${
-                      isActive
-                        ? 'bg-blue-800 text-white'
-                        : 'text-blue-300 hover:bg-blue-800 hover:text-white'
-                    }`}
-                  >
-                    <i className={`${link.icon} w-6`}></i>
-                    <span>{link.label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
       </div>
 
-      <div className="absolute bottom-0 w-64 p-6">
+      {/* Navigation */}
+      <nav className="flex-1 p-4 overflow-y-auto">
+        <div className="space-y-1">
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.path}
+              to={link.path}
+              className={({ isActive }) => `
+                flex items-center px-4 py-3 mb-2 rounded-lg transition-all duration-200
+                ${isActive 
+                  ? 'bg-blue-500 text-white shadow-md' 
+                  : 'text-gray-600 hover:bg-blue-50 hover:text-blue-500'
+                }
+              `}
+              onClick={() => onClose?.()}
+            >
+              <div className="flex items-center flex-1">
+                <i className={`${link.icon} w-6`}></i>
+                <span className="ml-3">{link.label}</span>
+              </div>
+            </NavLink>
+          ))}
+        </div>
+      </nav>
+
+      {/* Footer */}
+      <div className="p-4 border-t">
         <button
-          onClick={onLogout}
-          className="w-full flex items-center justify-center p-3 text-blue-300 hover:text-white hover:bg-blue-800 rounded-lg transition-colors"
+          onClick={handleLogout}
+          className="w-full flex items-center px-4 py-2 text-gray-600 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors duration-200"
         >
           <i className="fas fa-sign-out-alt w-6"></i>
-          <span>Logout</span>
+          <span className="ml-3">Logout</span>
         </button>
       </div>
+
+      {/* Mobile close button */}
+      <button
+        onClick={() => onClose?.()}
+        className="lg:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-gray-700"
+      >
+        <i className="fas fa-times"></i>
+      </button>
     </div>
   );
 };

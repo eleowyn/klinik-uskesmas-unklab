@@ -1,18 +1,19 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useAlert } from './AlertContext';
-import doctorService from '../services/doctorService';
+import staffService from '../services/staffService';
 
-const DoctorContext = createContext(null);
+const StaffContext = createContext(null);
 
-export const DoctorProvider = ({ children }) => {
+export const StaffProvider = ({ children }) => {
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState({
-    doctorProfile: null,
+    staffProfile: null,
     patients: [],
-    prescriptions: [],
-    appointments: []
+    appointments: [],
+    transactions: [],
+    doctors: []
   });
 
   const updateDashboardData = useCallback((newData) => {
@@ -24,18 +25,20 @@ export const DoctorProvider = ({ children }) => {
     setError(null);
 
     try {
-      const [profile, patients, prescriptions, appointments] = await Promise.all([
-        doctorService.getDoctorProfile(),
-        doctorService.getDoctorPatients(),
-        doctorService.getDoctorPrescriptions(),
-        doctorService.getDoctorAppointments()
+      const [profile, patients, appointments, transactions, doctors] = await Promise.all([
+        staffService.getStaffProfile(),
+        staffService.getAllPatients(),
+        staffService.getUpcomingAppointments(),
+        staffService.getTransactions(),
+        staffService.getDoctors()
       ]);
 
       const newData = {
-        doctorProfile: profile,
+        staffProfile: profile,
         patients: Array.isArray(patients) ? patients : [],
-        prescriptions: Array.isArray(prescriptions) ? prescriptions : [],
-        appointments: Array.isArray(appointments) ? appointments : []
+        appointments: Array.isArray(appointments) ? appointments : [],
+        transactions: Array.isArray(transactions) ? transactions : [],
+        doctors: Array.isArray(doctors) ? doctors : []
       };
 
       setDashboardData(newData);
@@ -52,7 +55,7 @@ export const DoctorProvider = ({ children }) => {
   // Patient Management
   const addPatient = useCallback(async (patientData) => {
     try {
-      const newPatient = await doctorService.addPatient(patientData);
+      const newPatient = await staffService.createPatient(patientData);
       setDashboardData(prev => ({
         ...prev,
         patients: [...prev.patients, newPatient]
@@ -65,18 +68,18 @@ export const DoctorProvider = ({ children }) => {
     }
   }, [showAlert]);
 
-  // Prescription Management
-  const addPrescription = useCallback(async (prescriptionData) => {
+  // Transaction Management
+  const addTransaction = useCallback(async (transactionData) => {
     try {
-      const newPrescription = await doctorService.createPrescription(prescriptionData);
+      const newTransaction = await staffService.createTransaction(transactionData);
       setDashboardData(prev => ({
         ...prev,
-        prescriptions: [...prev.prescriptions, newPrescription]
+        transactions: [...prev.transactions, newTransaction]
       }));
-      showAlert('Prescription created successfully', 'success');
-      return newPrescription;
+      showAlert('Transaction created successfully', 'success');
+      return newTransaction;
     } catch (err) {
-      showAlert(err.message || 'Failed to create prescription', 'error');
+      showAlert(err.message || 'Failed to create transaction', 'error');
       throw err;
     }
   }, [showAlert]);
@@ -84,7 +87,7 @@ export const DoctorProvider = ({ children }) => {
   // Appointment Management
   const addAppointment = useCallback(async (appointmentData) => {
     try {
-      const newAppointment = await doctorService.createAppointment(appointmentData);
+      const newAppointment = await staffService.createAppointment(appointmentData);
       setDashboardData(prev => ({
         ...prev,
         appointments: [...prev.appointments, newAppointment]
@@ -99,7 +102,7 @@ export const DoctorProvider = ({ children }) => {
 
   const updateAppointment = useCallback(async (appointmentId, updateData) => {
     try {
-      const updatedAppointment = await doctorService.updateAppointment(appointmentId, updateData);
+      const updatedAppointment = await staffService.updateAppointment(appointmentId, updateData);
       setDashboardData(prev => ({
         ...prev,
         appointments: prev.appointments.map(apt => 
@@ -121,22 +124,22 @@ export const DoctorProvider = ({ children }) => {
     updateDashboardData,
     refreshDashboardData,
     addPatient,
-    addPrescription,
+    addTransaction,
     addAppointment,
     updateAppointment
   };
 
   return (
-    <DoctorContext.Provider value={value}>
+    <StaffContext.Provider value={value}>
       {children}
-    </DoctorContext.Provider>
+    </StaffContext.Provider>
   );
 };
 
-export const useDoctorContext = () => {
-  const context = useContext(DoctorContext);
+export const useStaffContext = () => {
+  const context = useContext(StaffContext);
   if (!context) {
-    throw new Error('useDoctorContext must be used within a DoctorProvider');
+    throw new Error('useStaffContext must be used within a StaffProvider');
   }
   return context;
 };

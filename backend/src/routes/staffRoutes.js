@@ -4,43 +4,59 @@ const staffController = require('../controllers/staffController');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
 
-// Debugging line to verify imports
-console.log('Imported staffController methods:', Object.keys(staffController));
+// Debug middleware
+router.use((req, res, next) => {
+  console.log('Staff Route -', {
+    method: req.method,
+    url: req.originalUrl,
+    body: req.body,
+    userId: req.user?.id,
+    role: req.user?.role
+  });
+  next();
+});
 
-// Patient Management Routes
-router.get('/patients', auth, roleCheck(['staff']), staffController.getPatients);
-router.get('/patients/:id', auth, roleCheck(['staff']), staffController.getPatient);
-router.post('/patients', auth, roleCheck(['staff']), staffController.createPatient);
-router.put('/patients/:id', auth, roleCheck(['staff']), staffController.updatePatient);
-router.delete('/patients/:id', auth, roleCheck(['staff']), staffController.deletePatient);
-router.get('/patients/:patientId/transactions', auth, roleCheck(['staff']), staffController.getPatientTransactionHistory);
-
-// Transaction Routes
-router.get('/transactions', auth, roleCheck(['staff']), staffController.getTransactions);
-router.get('/transactions/:id', auth, roleCheck(['staff']), staffController.getTransaction);
-router.post('/transactions', auth, roleCheck(['staff']), staffController.createTransaction);
-router.put('/transactions/:id', auth, roleCheck(['staff']), staffController.updateTransaction);
-router.delete('/transactions/:id', auth, roleCheck(['staff']), staffController.deleteTransaction);
-
-// Appointment Management Routes
-router.get('/appointments', auth, roleCheck(['staff']), staffController.fetchUpcomingAppointments);
-router.get('/appointments/:id', auth, roleCheck(['staff']), staffController.getAppointment);
-router.post('/appointments', auth, roleCheck(['staff']), staffController.createAppointment);
-router.put('/appointments/:id', auth, roleCheck(['staff']), staffController.updateAppointment);
-router.delete('/appointments/:id', auth, roleCheck(['staff']), staffController.deleteAppointment);
-
-// Remove the doctors route if you don't have a getDoctors controller method
-// router.get('/doctors', auth, roleCheck(['staff']), staffController.getDoctors);
+// Middleware to check if user is staff
+const staffAuth = [auth, roleCheck(['staff'])];
 
 // Staff Profile Routes
-router.get('/profile', auth, roleCheck(['staff']), staffController.getProfile);
-router.put('/profile', auth, roleCheck(['staff']), staffController.updateProfile);
+router.get('/profile', staffAuth, staffController.getProfile);
+router.get('/staff/:id', staffAuth, staffController.getStaff);
+router.get('/staff', staffAuth, staffController.getStaffMembers);
+router.put('/profile', staffAuth, staffController.updateProfile);
 
-// Staff Management Routes
-router.get('/', auth, roleCheck(['staff']), staffController.getStaffMembers);
-router.get('/:id', auth, roleCheck(['staff']), staffController.getStaff);
+// Doctor Routes
+router.get('/doctors', staffAuth, staffController.getDoctors);
 
-// Get all doctors
-router.get('/doctors', auth, roleCheck(['staff']), staffController.getDoctors);
+// Patient Routes
+router.get('/patients', staffAuth, staffController.getPatients);
+router.post('/patients', staffAuth, staffController.createPatient);
+router.get('/patients/:id', staffAuth, staffController.getPatient);
+router.put('/patients/:id', staffAuth, staffController.updatePatient);
+router.delete('/patients/:id', staffAuth, staffController.deletePatient);
+
+// Transaction Routes
+router.post('/transactions', staffAuth, staffController.createTransaction);
+router.get('/transactions', staffAuth, staffController.getTransactions);
+router.get('/transactions/:id', staffAuth, staffController.getTransaction);
+router.put('/transactions/:id', staffAuth, staffController.updateTransaction);
+router.delete('/transactions/:id', staffAuth, staffController.deleteTransaction);
+router.get('/patients/:patientId/transactions', staffAuth, staffController.getPatientTransactionHistory);
+
+// Appointment Routes
+router.get('/appointments', staffAuth, staffController.fetchUpcomingAppointments);
+router.post('/appointments', staffAuth, staffController.createAppointment);
+router.get('/appointments/:id', staffAuth, staffController.getAppointment);
+router.put('/appointments/:id', staffAuth, staffController.updateAppointment);
+router.delete('/appointments/:id', staffAuth, staffController.deleteAppointment);
+
+// Error handling middleware
+router.use((err, req, res, next) => {
+  console.error('Staff Routes Error:', err);
+  res.status(err.status || 500).json({
+    status: 'error',
+    message: err.message || 'Internal server error'
+  });
+});
 
 module.exports = router;

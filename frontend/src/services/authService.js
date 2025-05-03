@@ -1,205 +1,133 @@
 import axios from 'axios';
 
+const API_URL = 'http://localhost:5000/api';
+
+// Create axios instance with default config
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
-  },
-  withCredentials: false // Changed from true since we're using token-based auth
+  }
 });
 
-// Debug function
-const logRequestDetails = (config) => {
-  console.log('Request Details:', {
-    url: config.url,
-    method: config.method,
-    headers: {
-      ...config.headers,
-      Authorization: config.headers.Authorization ? 'Bearer [TOKEN]' : 'No token'
-    }
-  });
-};
-
-// Request interceptor for adding auth token
+// Add token to requests if it exists
 api.interceptors.request.use(
   (config) => {
-    console.log('Making request to:', config.url);
-    
-    // Get token from localStorage
     const token = localStorage.getItem('token');
-    console.log('Token present:', !!token);
-    
-    // Token format must match what your auth middleware expects
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    logRequestDetails(config);
     return config;
   },
   (error) => {
-    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor for handling errors
+// Handle response errors
 api.interceptors.response.use(
-  (response) => {
-    console.log('Response from:', response.config.url, {
-      status: response.status,
-      statusText: response.statusText
-    });
-    return response;
-  },
+  (response) => response,
   (error) => {
-    if (error.response) {
-      console.error('Response error for:', error.config?.url, {
-        status: error.response.status,
-        message: error.response.data?.message
-      });
-
-      // Handle specific error cases
-      switch (error.response.status) {
-        case 401:
-          console.log('Unauthorized - clearing auth data and redirecting to login');
-          // Unauthorized - clear token and redirect to login
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
-          break;
-        case 403:
-          console.error('Access denied:', error.response.data.message);
-          break;
-        default:
-          console.error('API Error:', error.response.data.message);
-      }
-    } else if (error.request) {
-      console.error('Network Error:', error.message);
-    } else {
-      console.error('Error:', error.message);
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
-// Auth API functions
-export const login = async (credentials) => {
+// Auth functions
+export const login = async (email, password) => {
   try {
-    console.log('Attempting login...');
-    const response = await api.post('/auth/login', credentials);
-    const { data } = response.data;
-    
-    if (!data || !data.token || !data.user) {
-      console.error('Invalid login response format:', response.data);
-      throw new Error('Invalid response format from server');
+    const response = await api.post('/auth/login', { email, password });
+    if (response.data.data.token) {
+      localStorage.setItem('token', response.data.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
-
-    console.log('Login successful, storing auth data');
-    // Store token
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error('Login error:', error);
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
-    }
-    throw error;
+    throw error.response?.data?.message || 'Failed to login';
   }
 };
 
 export const register = async (userData) => {
   try {
-    console.log('Attempting registration...');
     const response = await api.post('/auth/register', userData);
-    const { data } = response.data;
-    
-    if (!data || !data.token || !data.user) {
-      console.error('Invalid registration response format:', response.data);
-      throw new Error('Invalid response format from server');
+    if (response.data.data.token) {
+      localStorage.setItem('token', response.data.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
-
-    console.log('Registration successful, storing auth data');
-    // Store token
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    
-    return response.data;
+    return response.data.data;
   } catch (error) {
-    console.error('Registration error:', error);
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
-    }
-    throw error;
+    console.error('Register error:', error);
+    throw error.response?.data?.message || 'Failed to register';
   }
 };
 
 export const logout = () => {
-  console.log('Logging out, clearing auth data');
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  window.location.href = '/login';
 };
 
-export const getCurrentUser = async () => {
+export const getCurrentUser = () => {
+  const userStr = localStorage.getItem('user');
+  if (!userStr) return null;
+  
   try {
-    console.log('Fetching current user...');
-    const response = await api.get('/auth/me');
-    const { data } = response.data;
-    
-    if (!data || !data.user) {
-      console.error('Invalid getCurrentUser response format:', response.data);
-      throw new Error('Invalid response format from server');
-    }
-    
-    console.log('Current user fetched successfully');
-    return data.user;
+    return JSON.parse(userStr);
   } catch (error) {
-    console.error('Get current user error:', error);
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
-    }
-    throw error;
+    console.error('Error parsing user data:', error);
+    return null;
   }
+};
+
+export const isAuthenticated = () => {
+  return !!localStorage.getItem('token');
 };
 
 export const updateProfile = async (userData) => {
   try {
-    console.log('Updating profile...');
     const response = await api.put('/auth/profile', userData);
-    const { data } = response.data;
-    
-    if (!data) {
-      console.error('Invalid updateProfile response format:', response.data);
-      throw new Error('Invalid response format from server');
-    }
-    
-    console.log('Profile updated successfully');
-    return data;
+    const updatedUser = response.data.data;
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    return updatedUser;
   } catch (error) {
     console.error('Update profile error:', error);
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
-    }
-    throw error;
+    throw error.response?.data?.message || 'Failed to update profile';
   }
 };
 
 export const changePassword = async (passwordData) => {
   try {
-    console.log('Changing password...');
     const response = await api.put('/auth/change-password', passwordData);
-    console.log('Password changed successfully');
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error('Change password error:', error);
-    if (error.response?.data?.message) {
-      throw new Error(error.response.data.message);
-    }
-    throw error;
+    throw error.response?.data?.message || 'Failed to change password';
   }
 };
 
+export const forgotPassword = async (email) => {
+  try {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data.data;
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    throw error.response?.data?.message || 'Failed to process forgot password request';
+  }
+};
+
+export const resetPassword = async (token, password) => {
+  try {
+    const response = await api.post('/auth/reset-password', { token, password });
+    return response.data.data;
+  } catch (error) {
+    console.error('Reset password error:', error);
+    throw error.response?.data?.message || 'Failed to reset password';
+  }
+};
+
+// Export the axios instance for other services to use
 export default api;

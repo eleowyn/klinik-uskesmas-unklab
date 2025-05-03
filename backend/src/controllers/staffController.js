@@ -122,7 +122,12 @@ const getPatient = async (req, res, next) => {
 
 const createPatient = async (req, res, next) => {
   try {
-    const patient = await createNewPatient(req.body);
+    // Add user field from authenticated user to patient data
+    const patientData = {
+      ...req.body,
+      user: req.user.id
+    };
+    const patient = await createNewPatient(patientData);
     res.status(201).json(responseFormatter({
       status: 'success',
       data: patient,

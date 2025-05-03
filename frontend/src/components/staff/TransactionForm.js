@@ -1,234 +1,219 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AlertContext } from '../../context/AlertContext';
-import { getPatients, createTransaction } from '../../services/staffService';
+import { getAllPatients, createTransaction, updateTransaction, getTransactionDetails } from '../../services/staffService';
 
 const TransactionForm = () => {
-  const { user } = useContext(AuthContext);
-  const { showAlert } = useContext(AlertContext);
+  const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  const queryParams = new URLSearchParams(location.search);
-  const patientId = queryParams.get('patientId');
-  
-  const [formData, setFormData] = useState({
-    patient: patientId || '',
-    prescription: '',
-    items: [{ name: '', quantity: 1 }],
-    notes: '',
-  });
-  
-  const [patients, setPatients] = useState([]);
-  const [prescriptions, setPrescriptions] = useState([]);
+  const { showAlert } = useContext(AlertContext);
   const [loading, setLoading] = useState(false);
+  const [patients, setPatients] = useState([]);
+  const [formData, setFormData] = useState({
+    patientId: '',
+    amount: '',
+    type: 'payment',
+    description: '',
+    paymentMethod: 'cash',
+    status: 'pending',
+    notes: ''
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!patientId) {
-          const patientsData = await getPatients();
-          setPatients(patientsData || []);
+        setLoading(true);
+        const patientsData = await getAllPatients();
+        setPatients(patientsData);
+
+        if (id) {
+          const transactionData = await getTransactionDetails(id);
+          setFormData({
+            patientId: transactionData.patient._id,
+            amount: transactionData.amount,
+            type: transactionData.type,
+            description: transactionData.description,
+            paymentMethod: transactionData.paymentMethod,
+            status: transactionData.status,
+            notes: transactionData.notes || ''
+          });
         }
-        
-        // For demo purposes, we'll use some mock prescriptions
-        setPrescriptions([
-          { _id: '1', diagnosis: 'Common Cold', datePrescribed: new Date() },
-          { _id: '2', diagnosis: 'Hypertension', datePrescribed: new Date() },
-        ]);
       } catch (err) {
-        console.error('Error fetching data:', err);
-        showAlert(err.message || 'Failed to fetch data', 'error');
+        showAlert(err.message, 'error');
+      } finally {
+        setLoading(false);
       }
     };
-    
+
     fetchData();
-  }, [patientId, showAlert]);
+  }, [id, showAlert]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleItemChange = (index, e) => {
-    const { name, value } = e.target;
-    const updatedItems = [...formData.items];
-    updatedItems[index][name] = name === 'quantity' ? Number(value) : value;
-    
-    setFormData({
-      ...formData,
-      items: updatedItems,
-    });
-  };
-
-  const addItem = () => {
-    setFormData({
-      ...formData,
-      items: [
-        ...formData.items,
-        { name: '', quantity: 1 },
-      ],
-    });
-  };
-
-  const removeItem = (index) => {
-    const updatedItems = [...formData.items];
-    updatedItems.splice(index, 1);
-    
-    setFormData({
-      ...formData,
-      items: updatedItems,
-    });
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Client-side validation
-    if (!formData.patient) {
-      showAlert('Please select a patient', 'error');
-      return;
-    }
-    if (!formData.items || formData.items.length === 0) {
-      showAlert('Please add at least one item', 'error');
-      return;
-    }
-    for (const item of formData.items) {
-      if (!item.name || item.name.trim() === '') {
-        showAlert('Item name cannot be empty', 'error');
-        return;
-      }
-      if (!item.quantity || item.quantity < 1) {
-        showAlert('Item quantity must be at least 1', 'error');
-        return;
-      }
-    }
-
-    // Convert prescription to ObjectId or null if empty string
-    const transactionData = {
-      ...formData,
-      prescription: formData.prescription && formData.prescription.length === 24 ? formData.prescription : null,
-    };
-
     setLoading(true);
-    
+
     try {
-      await createTransaction(transactionData);
-      showAlert('Transaction recorded successfully', 'success');
+      const data = {
+        patient: formData.patientId,
+        amount: parseFloat(formData.amount),
+        type: formData.type,
+        description: formData.description,
+        paymentMethod: formData.paymentMethod,
+        status: formData.status,
+        notes: formData.notes
+      };
+
+      if (id) {
+        await updateTransaction(id, data);
+        showAlert('Transaction updated successfully', 'success');
+      } else {
+        await createTransaction(data);
+        showAlert('Transaction created successfully', 'success');
+      }
       navigate('/staff/transactions');
     } catch (err) {
-      showAlert(err.message || 'Failed to record transaction', 'error');
+      showAlert(err.message, 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Record New Transaction</h1>
-      
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+        {id ? 'Edit Transaction' : 'New Transaction'}
+      </h1>
+
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
-        {!patientId && (
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2" htmlFor="patient">
-              Patient
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-gray-700 mb-2" htmlFor="patientId">
+              Patient *
             </label>
             <select
-              id="patient"
-              name="patient"
-              value={formData.patient}
+              id="patientId"
+              name="patientId"
+              value={formData.patientId}
               onChange={handleChange}
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
-              <option value="">Select a patient</option>
+              <option value="">Select Patient</option>
               {patients.map(patient => (
                 <option key={patient._id} value={patient._id}>
-                  {patient.fullName} ({patient.phoneNumber})
+                  {patient.fullName}
                 </option>
               ))}
             </select>
           </div>
-        )}
-        
-        <div className="mb-6">
-          <label className="block text-gray-700 mb-2" htmlFor="prescription">
-            Prescription (Optional)
-          </label>
-          <select
-            id="prescription"
-            name="prescription"
-            value={formData.prescription}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">No prescription</option>
-            {prescriptions.map(prescription => (
-              <option key={prescription._id} value={prescription._id}>
-                {prescription.diagnosis} - {new Date(prescription.datePrescribed).toLocaleDateString()}
-              </option>
-            ))}
-          </select>
-        </div>
-        
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Items</h3>
-            <button
-              type="button"
-              onClick={addItem}
-              className="bg-blue-100 text-blue-600 px-3 py-1 rounded hover:bg-blue-200 transition"
-            >
-              Add Item
-            </button>
+
+          <div>
+            <label className="block text-gray-700 mb-2" htmlFor="amount">
+              Amount *
+            </label>
+            <input
+              type="number"
+              id="amount"
+              name="amount"
+              value={formData.amount}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              min="0"
+              step="0.01"
+            />
           </div>
-          
-          {formData.items.map((item, index) => (
-            <div key={index} className="mb-4 p-4 border rounded-lg bg-gray-50">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                <div>
-                  <label className="block text-gray-700 mb-1">Item Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={item.name}
-                    onChange={(e) => handleItemChange(index, e)}
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 mb-1">Quantity</label>
-                  <input
-                    type="number"
-                    name="quantity"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => handleItemChange(index, e)}
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-              
-              {formData.items.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeItem(index)}
-                  className="mt-2 text-red-600 hover:text-red-800 text-sm"
-                >
-                  Remove Item
-                </button>
-              )}
-            </div>
-          ))}
+
+          <div>
+            <label className="block text-gray-700 mb-2" htmlFor="type">
+              Type *
+            </label>
+            <select
+              id="type"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="payment">Payment</option>
+              <option value="refund">Refund</option>
+              <option value="adjustment">Adjustment</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-gray-700 mb-2" htmlFor="paymentMethod">
+              Payment Method *
+            </label>
+            <select
+              id="paymentMethod"
+              name="paymentMethod"
+              value={formData.paymentMethod}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="cash">Cash</option>
+              <option value="credit_card">Credit Card</option>
+              <option value="debit_card">Debit Card</option>
+              <option value="insurance">Insurance</option>
+              <option value="bank_transfer">Bank Transfer</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-gray-700 mb-2" htmlFor="status">
+              Status *
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="refunded">Refunded</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-gray-700 mb-2" htmlFor="description">
+              Description *
+            </label>
+            <input
+              type="text"
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
         </div>
-        
-        <div className="mb-6">
+
+        <div className="mt-6">
           <label className="block text-gray-700 mb-2" htmlFor="notes">
             Notes
           </label>
@@ -241,8 +226,8 @@ const TransactionForm = () => {
             className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           ></textarea>
         </div>
-        
-        <div className="flex justify-end space-x-4">
+
+        <div className="mt-8 flex justify-end space-x-4">
           <button
             type="button"
             onClick={() => navigate('/staff/transactions')}
@@ -255,7 +240,7 @@ const TransactionForm = () => {
             disabled={loading}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400 transition"
           >
-            {loading ? 'Processing...' : 'Record Transaction'}
+            {loading ? 'Saving...' : (id ? 'Update Transaction' : 'Create Transaction')}
           </button>
         </div>
       </form>

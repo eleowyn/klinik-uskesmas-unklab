@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useCallback } from 'react';
-import { Navigate, Outlet, Routes, Route } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { AlertContext } from '../context/AlertContext';
 import { DoctorProvider, useDoctorContext } from '../context/DoctorContext';
@@ -7,12 +7,27 @@ import Sidebar from '../components/common/Sidebar';
 import DoctorDashboard from '../components/doctor/DoctorDashboard';
 import doctorService from '../services/doctorService';
 
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center h-64">
+    <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+  </div>
+);
+
+const ErrorDisplay = ({ message }) => (
+  <div className="flex justify-center items-center h-64">
+    <div className="text-red-500 bg-red-100 p-4 rounded-lg shadow flex items-center">
+      <i className="fas fa-exclamation-circle mr-2 text-xl"></i>
+      <span>{message}</span>
+    </div>
+  </div>
+);
+
 const DoctorContent = () => {
   const { user, isAuthenticated } = useContext(AuthContext);
   const { showAlert } = useContext(AlertContext);
   const { updateDashboardData } = useDoctorContext();
   const [loading, setLoading] = useState(true);
-  const [dataLoaded, setDataLoaded] = useState(false);
+  const [error, setError] = useState(null);
   const [dashboardData, setDashboardData] = useState({
     doctorProfile: null,
     patients: [],
@@ -20,29 +35,19 @@ const DoctorContent = () => {
     appointments: []
   });
 
-  // Memoize the fetch function to prevent unnecessary re-renders
   const fetchDashboardData = useCallback(async () => {
-    if (!isAuthenticated || !user || user.role !== 'doctor' || dataLoaded) {
-      console.log('Skipping data fetch:', {
-        isAuthenticated,
-        hasUser: !!user,
-        role: user?.role,
-        dataLoaded
-      });
+    if (!isAuthenticated || !user || user.role !== 'doctor') {
       setLoading(false);
       return;
     }
 
+    setLoading(true);
+    setError(null);
+
     try {
-      console.log('Starting sequential data fetch...');
-      setLoading(true);
-
-      // First, get the profile
+      // Get doctor profile
       const profile = await doctorService.getDoctorProfile();
-      if (!profile) {
-        throw new Error('Failed to load doctor profile');
-      }
-
+      
       let newData = {
         doctorProfile: profile,
         patients: [],
@@ -50,131 +55,139 @@ const DoctorContent = () => {
         appointments: []
       };
 
-      // Then, get patients
-      try {
-        const patients = await doctorService.getDoctorPatients();
-        newData.patients = patients || [];
-      } catch (error) {
-        console.error('Failed to load patients:', error);
-        showAlert('Failed to load patients', 'warning');
-      }
+      // Fetch all data in parallel for better performance
+      const [patients, prescriptions, appointments] = await Promise.all([
+        doctorService.getDoctorPatients(),
+        doctorService.getDoctorPrescriptions(),
+        doctorService.getDoctorAppointments()
+      ]);
 
-      // Then, get prescriptions
-      try {
-        const prescriptions = await doctorService.getDoctorPrescriptions();
-        newData.prescriptions = prescriptions || [];
-      } catch (error) {
-        console.error('Failed to load prescriptions:', error);
-        showAlert('Failed to load prescriptions', 'warning');
-      }
+      newData = {
+        ...newData,
+        patients: Array.isArray(patients) ? patients : [],
+        prescriptions: Array.isArray(prescriptions) ? prescriptions : [],
+        appointments: Array.isArray(appointments) ? appointments : []
+      };
 
-      // Finally, get appointments
-      try {
-        const appointments = await doctorService.getDoctorAppointments();
-        newData.appointments = appointments || [];
-      } catch (error) {
-        console.error('Failed to load appointments:', error);
-        showAlert('Failed to load appointments', 'warning');
-      }
-
-      console.log('All data fetched successfully');
       setDashboardData(newData);
       updateDashboardData(newData);
-      setDataLoaded(true);
+      setError(null);
     } catch (err) {
-      console.error('Failed to load dashboard data:', err);
-      showAlert('Failed to load doctor profile', 'error');
-      // Set empty data on error
-      setDashboardData({
-        doctorProfile: null,
-        patients: [],
-        prescriptions: [],
-        appointments: []
-      });
+      console.error('Error fetching dashboard data:', err);
+      setError(err.message || 'Failed to load dashboard data');
+      showAlert(err.message || 'Failed to load dashboard data', 'error');
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, user, updateDashboardData, showAlert, dataLoaded]);
+  }, [isAuthenticated, user, updateDashboardData, showAlert]);
 
   useEffect(() => {
-    console.log('DoctorContent useEffect - Auth state:', {
-      isAuthenticated,
-      userRole: user?.role,
-      dataLoaded
-    });
-    
-    // Reset dataLoaded when auth state changes
-    if (!isAuthenticated || !user) {
-      setDataLoaded(false);
-    }
-    
-    // Only fetch data if not already loaded
-    if (!dataLoaded) {
-      fetchDashboardData();
-    }
+    fetchDashboardData();
 
-    // Cleanup function
-    return () => {
-      // No cleanup needed
-    };
-  }, [fetchDashboardData, isAuthenticated, user, dataLoaded]);
+    // Auto-refresh data every 30 seconds
+    const refreshInterval = setInterval(fetchDashboardData, 30000);
+
+    return () => clearInterval(refreshInterval);
+  }, [fetchDashboardData]);
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorDisplay message={error} />;
+
+  return <DoctorDashboard dashboardData={dashboardData} />;
+};
+
+const DoctorPortal = () => {
+  const { user, isAuthenticated, loading } = useContext(AuthContext);
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading doctor portal...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <Routes>
-      <Route index element={<DoctorDashboard dashboardData={dashboardData} />} />
-      <Route path="/*" element={<Outlet />} />
-    </Routes>
-  );
-};
-
-const DoctorPortal = () => {
-  const { user, isAuthenticated, isLoading } = useContext(AuthContext);
-
-  console.log('DoctorPortal - Auth state:', {
-    isAuthenticated,
-    isLoading,
-    userRole: user?.role
-  });
-
-  // Show loading state
-  if (isLoading) {
-    return <div className="container mt-5 text-center">Loading...</div>;
-  }
-
-  // Redirect if not authenticated or not a doctor
   if (!isAuthenticated || (user && user.role !== 'doctor')) {
-    console.log('Redirecting to login - Not authenticated or not a doctor');
     return <Navigate to="/login" replace />;
   }
 
   const navLinks = [
-    { path: '/doctor', label: 'Dashboard', icon: 'fas fa-home' },
-    { path: '/doctor/patients', label: 'Patients', icon: 'fas fa-user-injured' },
-    { path: '/doctor/prescriptions', label: 'Prescriptions', icon: 'fas fa-prescription' },
-    { path: '/doctor/schedule', label: 'Schedule', icon: 'fas fa-calendar' }
+    { 
+      path: '/doctor/dashboard', 
+      label: 'Dashboard', 
+      icon: 'fas fa-home',
+      description: 'Overview of your activities'
+    },
+    { 
+      path: '/doctor/patients', 
+      label: 'Patients', 
+      icon: 'fas fa-user-injured',
+      description: 'Manage your patients'
+    },
+    { 
+      path: '/doctor/prescriptions', 
+      label: 'Prescriptions', 
+      icon: 'fas fa-prescription',
+      description: 'View and create prescriptions'
+    },
+    { 
+      path: '/doctor/schedule', 
+      label: 'Schedule', 
+      icon: 'fas fa-calendar',
+      description: 'Manage your appointments'
+    }
   ];
 
   return (
     <DoctorProvider>
-      <div className="flex h-screen bg-gray-100">
-        <Sidebar 
-          title="Doctor Portal"
-          navLinks={navLinks}
-          user={user}
-        />
-        <div className="flex-1 overflow-auto">
-          <div className="p-6">
-            <DoctorContent />
+      <div className="flex h-screen bg-gray-50">
+        {/* Sidebar Toggle Button for Mobile */}
+        <button
+          className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-blue-500 text-white"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          <i className={`fas fa-${sidebarOpen ? 'times' : 'bars'}`}></i>
+        </button>
+
+        {/* Sidebar */}
+        <div className={`
+          lg:relative fixed inset-y-0 left-0 z-40
+          transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0 transition-transform duration-300 ease-in-out
+        `}>
+          <Sidebar 
+            title="Doctor Portal"
+            navLinks={navLinks}
+            user={user}
+            onClose={() => setSidebarOpen(false)}
+          />
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto bg-gray-50">
+          <div className="container mx-auto px-4 py-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              {location.pathname === '/doctor/dashboard' ? (
+                <DoctorContent />
+              ) : (
+                <Outlet />
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Overlay for mobile */}
+        {sidebarOpen && (
+          <div 
+            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
       </div>
     </DoctorProvider>
   );

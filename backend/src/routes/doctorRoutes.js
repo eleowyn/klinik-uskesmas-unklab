@@ -1,46 +1,50 @@
 const express = require('express');
 const router = express.Router();
-const {
-  getProfile,
-  getDoctor,
-  getDoctors,
-  updateProfile,
-  getDoctorPatients,
-  getPatientDetails,
-  createPrescription,
-  getPrescriptions,
-  getPrescription,
-  updatePrescription,
-  getDoctorAppointments,
-  createAppointment,
-  getAppointmentDetails,
-  updateAppointment
-} = require('../controllers/doctorController');
+const doctorController = require('../controllers/doctorController');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
 
-// Profile routes - these should come first
-router.get('/profile', auth, roleCheck(['doctor']), getProfile);
-router.put('/profile', auth, roleCheck(['doctor']), updateProfile);
+// Middleware to check if user is a doctor
+const doctorAuth = [auth, roleCheck(['doctor'])];
 
-// Patient routes
-router.get('/patients', auth, roleCheck(['doctor']), getDoctorPatients);
-router.get('/patients/:id', auth, roleCheck(['doctor']), getPatientDetails);
+// Debug middleware
+router.use((req, res, next) => {
+  console.log('Doctor Route -', {
+    method: req.method,
+    url: req.originalUrl,
+    body: req.body,
+    userId: req.user?.id,
+    role: req.user?.role
+  });
+  next();
+});
 
-// Prescription routes
-router.get('/prescriptions', auth, roleCheck(['doctor']), getPrescriptions);
-router.post('/prescriptions', auth, roleCheck(['doctor']), createPrescription);
-router.get('/prescriptions/:id', auth, roleCheck(['doctor']), getPrescription);
-router.put('/prescriptions/:id', auth, roleCheck(['doctor']), updatePrescription);
+// Profile Routes
+router.get('/profile', doctorAuth, doctorController.getProfile);
 
-// Appointment routes
-router.get('/appointments', auth, roleCheck(['doctor']), getDoctorAppointments);
-router.post('/appointments', auth, roleCheck(['doctor']), createAppointment);
-router.get('/appointments/:id', auth, roleCheck(['doctor']), getAppointmentDetails);
-router.put('/appointments/:id', auth, roleCheck(['doctor']), updateAppointment);
+// Patient Routes
+router.get('/patients', doctorAuth, doctorController.getPatients);
+router.get('/patients/:id', doctorAuth, doctorController.getPatientDetails);
+router.post('/patients/:patientId/assign', doctorAuth, doctorController.assignPatientToDoctor);
 
-// General doctor routes - these should come last to avoid catching other routes
-router.get('/', auth, roleCheck(['staff', 'patient']), getDoctors);
-router.get('/:id', auth, roleCheck(['staff', 'patient']), getDoctor);
+// Prescription Routes
+router.get('/prescriptions', doctorAuth, doctorController.getPrescriptions);
+router.post('/prescriptions', doctorAuth, doctorController.createPrescription);
+
+// Appointment Routes
+router.get('/appointments', doctorAuth, doctorController.getAppointments);
+router.put('/appointments/:id', doctorAuth, doctorController.updateAppointment);
+
+// Schedule Routes
+router.get('/schedule', doctorAuth, doctorController.getSchedule);
+
+// Error handling middleware
+router.use((err, req, res, next) => {
+  console.error('Doctor Routes Error:', err);
+  res.status(err.status || 500).json({
+    status: 'error',
+    message: err.message || 'Internal server error'
+  });
+});
 
 module.exports = router;

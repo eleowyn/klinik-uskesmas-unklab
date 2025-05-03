@@ -1,146 +1,127 @@
-import React, { useState, useContext } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
-import { AlertContext } from '../../context/AlertContext';
+import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useAlert } from '../../context/AlertContext';
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   
-  const { login } = useContext(AuthContext);
-  const { showAlert } = useContext(AlertContext);
-  const navigate = useNavigate();
+  const { login } = useAuth();
+  const { showAlert } = useAlert();
 
-  const { email, password } = formData;
-
-  const onChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
-  const onSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setLoading(true);
+
     try {
-      setIsLoading(true);
-      const result = await login(formData);
-
-      if (result.success) {
-        const { user } = result.data;
-        
-        // Add debug logging
-        console.log('Login successful:', {
-          user,
-          role: user.role,
-          profile: user.staffProfile || user.doctorProfile || user.patientProfile
-        });
-
-        // Show welcome message with proper name
-        const profileName = 
-          user.staffProfile?.fullName || 
-          user.doctorProfile?.name || 
-          user.patientProfile?.fullName || 
-          user.username;
-
-        showAlert(`Welcome back, ${profileName}!`, 'success');
-        
-        // Small delay to ensure auth state is set
-        setTimeout(() => {
-          // Redirect based on role
-          switch (user.role) {
-            case 'doctor':
-              console.log('Navigating to doctor portal');
-              navigate('/doctor');
-              break;
-            case 'staff':
-              console.log('Navigating to staff portal');
-              navigate('/staff');
-              break;
-            case 'patient':
-              console.log('Navigating to patient portal');
-              navigate('/patient');
-              break;
-            default:
-              console.log('Navigating to home');
-              navigate('/');
-          }
-        }, 100);
-      } else {
-        showAlert(result.error || 'Login failed', 'error');
-      }
+      await login({ email: formData.email, password: formData.password });
     } catch (error) {
-      console.error('Login error:', error);
-      showAlert(error.message || 'Login failed. Please try again.', 'error');
+      showAlert(error.message || 'Login failed', 'error');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
-      <h2 className="text-2xl font-bold text-center mb-6">Login to Your Account</h2>
-      <form onSubmit={onSubmit} className="space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
         <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-            Email
-          </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-            id="email"
-            type="email"
-            name="email"
-            value={email}
-            onChange={onChange}
-            required
-            placeholder="Enter your email"
-            autoComplete="email"
-          />
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
         </div>
-        <div>
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-            Password
-          </label>
-          <input
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-            id="password"
-            type="password"
-            name="password"
-            value={password}
-            onChange={onChange}
-            required
-            placeholder="Enter your password"
-            autoComplete="current-password"
-          />
-        </div>
-        <div>
-          <button
-            className={`w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-150 ease-in-out ${
-              isLoading ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
-            type="submit"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
-                Logging in...
-              </div>
-            ) : (
-              'Login'
-            )}
-          </button>
-        </div>
-        <div className="text-center mt-4">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-blue-500 hover:text-blue-700 font-medium">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                loading
+                  ? 'bg-blue-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+            >
+              {loading ? (
+                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </span>
+              ) : null}
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </div>
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => window.location.href = '/register'}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
               Register
-            </Link>
-          </p>
-        </div>
-      </form>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

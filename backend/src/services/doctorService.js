@@ -1,173 +1,240 @@
-const {
-  findDoctorByUserId,
-  findDoctorById,
-  findAllDoctors,
-  updateDoctor,
-} = require('../repositories/doctorRepository');
-const {
-  createPrescription: createPrescriptionRepo,
-  findPrescriptionsByDoctor,
-  findPrescriptionById,
-  updatePrescription: updatePrescriptionRepo,
-} = require('../repositories/prescriptionRepository');
-const {
-  findByDoctor,
-  findPatientById,
-} = require('../repositories/patientRepository');
-const {
-  createAppointment: createAppointmentRepo,
-  findAppointmentsByDoctor,
-  findAppointmentById,
-  updateAppointment: updateAppointmentRepo,
-} = require('../repositories/appointmentRepository');
+const Doctor = require('../models/Doctor');
+const Patient = require('../models/Patient');
+const Prescription = require('../models/Prescription');
+const Appointment = require('../models/Appointment');
 
-// Doctor Profile
-const getDoctorProfile = async (userId) => {
-  console.log('Getting doctor profile for user:', userId);
-  const profile = await findDoctorByUserId(userId);
-  if (!profile) {
-    throw new Error('Doctor profile not found');
+class DoctorService {
+  // Profile Management
+  async getDoctorByUserId(userId) {
+    try {
+      const doctor = await Doctor.findOne({ user: userId })
+        .populate('user', '-password')
+        .populate('patients', 'fullName email phone')
+        .populate('appointments')
+        .populate('prescriptions');
+      
+      if (!doctor) {
+        throw new Error('Doctor not found');
+      }
+      
+      return doctor;
+    } catch (error) {
+      console.error('Error in getDoctorByUserId:', error);
+      throw error;
+    }
   }
-  return profile;
-};
 
-const getDoctorById = async (doctorId) => {
-  console.log('Getting doctor by ID:', doctorId);
-  const doctor = await findDoctorById(doctorId);
-  if (!doctor) {
-    throw new Error('Doctor not found');
+  async getDoctorById(doctorId) {
+    try {
+      const doctor = await Doctor.findById(doctorId)
+        .populate('user', '-password');
+      
+      if (!doctor) {
+        throw new Error('Doctor not found');
+      }
+      
+      return doctor;
+    } catch (error) {
+      console.error('Error in getDoctorById:', error);
+      throw error;
+    }
   }
-  return doctor;
-};
 
-const getAllDoctors = async () => {
-  console.log('Getting all doctors');
-  return await findAllDoctors();
-};
+  async updateDoctorProfile(doctorId, updateData) {
+    try {
+      const doctor = await Doctor.findByIdAndUpdate(
+        doctorId,
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
 
-const updateDoctorProfile = async (doctorId, updateData) => {
-  console.log('Updating doctor profile:', doctorId);
-  const updated = await updateDoctor(doctorId, updateData);
-  if (!updated) {
-    throw new Error('Failed to update doctor profile');
+      if (!doctor) {
+        throw new Error('Doctor not found');
+      }
+
+      return doctor;
+    } catch (error) {
+      console.error('Error in updateDoctorProfile:', error);
+      throw error;
+    }
   }
-  return updated;
-};
 
-// Patients
-const getDoctorPatients = async (doctorId) => {
-  console.log('Getting patients for doctor:', doctorId);
-  return await findByDoctor(doctorId);
-};
+  // Patient Management
+  async getDoctorPatients(doctorId) {
+    try {
+      const doctor = await Doctor.findById(doctorId);
+      if (!doctor) {
+        throw new Error('Doctor not found');
+      }
 
-const getPatientDetails = async (doctorId, patientId) => {
-  console.log('Getting patient details:', patientId, 'for doctor:', doctorId);
-  const patient = await findPatientById(patientId);
-  if (!patient) {
-    throw new Error('Patient not found');
+      const patients = await Patient.find({ doctors: doctorId })
+        .populate('user', '-password')
+        .sort({ fullName: 1 });
+
+      return patients;
+    } catch (error) {
+      console.error('Error in getDoctorPatients:', error);
+      throw error;
+    }
   }
-  // Check if this patient belongs to the doctor
-  if (!patient.doctors.includes(doctorId)) {
-    throw new Error('Patient not associated with this doctor');
-  }
-  return patient;
-};
 
-// Prescriptions
-const createPrescription = async (doctorId, prescriptionData) => {
-  console.log('Creating prescription for doctor:', doctorId);
-  return await createPrescriptionRepo({
-    ...prescriptionData,
-    doctor: doctorId,
-    date: new Date()
-  });
-};
+  async getPatientDetails(doctorId, patientId) {
+    try {
+      const patient = await Patient.findOne({
+        _id: patientId,
+        doctors: doctorId
+      }).populate('user', '-password');
 
-const getDoctorPrescriptions = async (doctorId) => {
-  console.log('Getting prescriptions for doctor:', doctorId);
-  return await findPrescriptionsByDoctor(doctorId);
-};
+      if (!patient) {
+        throw new Error('Patient not found or not associated with this doctor');
+      }
 
-const getPrescriptionDetails = async (doctorId, prescriptionId) => {
-  console.log('Getting prescription details:', prescriptionId, 'for doctor:', doctorId);
-  const prescription = await findPrescriptionById(prescriptionId);
-  if (!prescription) {
-    throw new Error('Prescription not found');
+      return patient;
+    } catch (error) {
+      console.error('Error in getPatientDetails:', error);
+      throw error;
+    }
   }
-  // Check if this prescription belongs to the doctor
-  if (prescription.doctor.toString() !== doctorId.toString()) {
-    throw new Error('Prescription not associated with this doctor');
-  }
-  return prescription;
-};
 
-const updatePrescription = async (doctorId, prescriptionId, updateData) => {
-  console.log('Updating prescription:', prescriptionId, 'for doctor:', doctorId);
-  // First check if the prescription exists and belongs to the doctor
-  const existing = await findPrescriptionById(prescriptionId);
-  if (!existing) {
-    throw new Error('Prescription not found');
-  }
-  if (existing.doctor.toString() !== doctorId.toString()) {
-    throw new Error('Prescription not associated with this doctor');
-  }
-  return await updatePrescriptionRepo(prescriptionId, updateData);
-};
+  // Prescription Management
+  async createPrescription(doctorId, prescriptionData) {
+    try {
+      const prescription = new Prescription({
+        ...prescriptionData,
+        doctor: doctorId,
+        date: new Date()
+      });
 
-// Appointments
-const getDoctorAppointments = async (doctorId) => {
-  console.log('Getting appointments for doctor:', doctorId);
-  return await findAppointmentsByDoctor(doctorId);
-};
+      await prescription.save();
 
-const createAppointment = async (doctorId, appointmentData) => {
-  console.log('Creating appointment for doctor:', doctorId);
-  return await createAppointmentRepo({
-    ...appointmentData,
-    doctor: doctorId,
-    status: 'scheduled'
-  });
-};
+      // Update doctor's prescriptions array
+      await Doctor.findByIdAndUpdate(doctorId, {
+        $push: { prescriptions: prescription._id }
+      });
 
-const getAppointmentDetails = async (doctorId, appointmentId) => {
-  console.log('Getting appointment details:', appointmentId, 'for doctor:', doctorId);
-  const appointment = await findAppointmentById(appointmentId);
-  if (!appointment) {
-    throw new Error('Appointment not found');
+      return prescription;
+    } catch (error) {
+      console.error('Error in createPrescription:', error);
+      throw error;
+    }
   }
-  // Check if this appointment belongs to the doctor
-  if (appointment.doctor.toString() !== doctorId.toString()) {
-    throw new Error('Appointment not associated with this doctor');
-  }
-  return appointment;
-};
 
-const updateAppointment = async (doctorId, appointmentId, updateData) => {
-  console.log('Updating appointment:', appointmentId, 'for doctor:', doctorId);
-  // First check if the appointment exists and belongs to the doctor
-  const existing = await findAppointmentById(appointmentId);
-  if (!existing) {
-    throw new Error('Appointment not found');
-  }
-  if (existing.doctor.toString() !== doctorId.toString()) {
-    throw new Error('Appointment not associated with this doctor');
-  }
-  return await updateAppointmentRepo(appointmentId, updateData);
-};
+  async getDoctorPrescriptions(doctorId) {
+    try {
+      const prescriptions = await Prescription.find({ doctor: doctorId })
+        .populate('patient', 'fullName')
+        .sort({ date: -1 });
 
-module.exports = {
-  getDoctorProfile,
-  getDoctorById,
-  getAllDoctors,
-  updateDoctorProfile,
-  getDoctorPatients,
-  getPatientDetails,
-  createPrescription,
-  getDoctorPrescriptions,
-  getPrescriptionDetails,
-  updatePrescription,
-  getDoctorAppointments,
-  createAppointment,
-  getAppointmentDetails,
-  updateAppointment
-};
+      return prescriptions;
+    } catch (error) {
+      console.error('Error in getDoctorPrescriptions:', error);
+      throw error;
+    }
+  }
+
+  async updatePrescription(doctorId, prescriptionId, updateData) {
+    try {
+      const prescription = await Prescription.findOneAndUpdate(
+        { _id: prescriptionId, doctor: doctorId },
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
+
+      if (!prescription) {
+        throw new Error('Prescription not found or not associated with this doctor');
+      }
+
+      return prescription;
+    } catch (error) {
+      console.error('Error in updatePrescription:', error);
+      throw error;
+    }
+  }
+
+  // Appointment Management
+  async getDoctorAppointments(doctorId, query = {}) {
+    try {
+      const appointments = await Appointment.find({ 
+        doctor: doctorId,
+        ...query 
+      })
+      .populate('patient', 'fullName')
+      .sort({ date: 1 });
+
+      return appointments;
+    } catch (error) {
+      console.error('Error in getDoctorAppointments:', error);
+      throw error;
+    }
+  }
+
+  async updateAppointment(doctorId, appointmentId, updateData) {
+    try {
+      const appointment = await Appointment.findOneAndUpdate(
+        { _id: appointmentId, doctor: doctorId },
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
+
+      if (!appointment) {
+        throw new Error('Appointment not found or not associated with this doctor');
+      }
+
+      return appointment;
+    } catch (error) {
+      console.error('Error in updateAppointment:', error);
+      throw error;
+    }
+  }
+
+  // Schedule Management
+  async getDoctorSchedule(doctorId, startDate, endDate) {
+    try {
+      const query = {
+        doctor: doctorId,
+        date: {}
+      };
+
+      if (startDate) query.date.$gte = new Date(startDate);
+      if (endDate) query.date.$lte = new Date(endDate);
+
+      const appointments = await Appointment.find(query)
+        .populate('patient', 'fullName')
+        .sort({ date: 1 });
+
+      const doctor = await Doctor.findById(doctorId);
+      if (!doctor) {
+        throw new Error('Doctor not found');
+      }
+
+      return {
+        appointments,
+        workingHours: doctor.workingHours
+      };
+    } catch (error) {
+      console.error('Error in getDoctorSchedule:', error);
+      throw error;
+    }
+  }
+
+  async updateWorkingHours(doctorId, workingHours) {
+    try {
+      const doctor = await Doctor.findByIdAndUpdate(
+        doctorId,
+        { $set: { workingHours } },
+        { new: true, runValidators: true }
+      );
+
+      if (!doctor) {
+        throw new Error('Doctor not found');
+      }
+
+      return doctor;
+    } catch (error) {
+      console.error('Error in updateWorkingHours:', error);
+      throw error;
+    }
+  }
+}
+
+module.exports = new DoctorService();

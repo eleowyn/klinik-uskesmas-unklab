@@ -1,182 +1,103 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as authService from '../services/authService';
+import { useAlert } from './AlertContext';
 
-export const AuthContext = createContext();
+export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('token'));
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
-  const [isAuthenticated, setIsAuthenticated] = useState(!!token && !!user);
-  const [isLoading, setLoading] = useState(true);
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { showAlert } = useAlert();
 
-  useEffect(() => {
-    const loadUser = async () => {
-      console.log('AuthContext - Loading user state:', {
-        hasToken: !!token,
-        hasUser: !!user,
-        isAuthenticated
-      });
-
-      if (token) {
-        try {
-          const userData = await authService.getCurrentUser();
-          console.log('AuthContext - User data loaded:', {
-            role: userData?.role,
-            hasProfile: !!userData?.profile
-          });
-
-          if (userData) {
-            setUser(userData);
-            setIsAuthenticated(true);
-            localStorage.setItem('user', JSON.stringify(userData));
-          } else {
-            throw new Error('Failed to get user data');
-          }
-        } catch (err) {
-          console.error('AuthContext - Load user error:', err);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setToken(null);
-          setUser(null);
-          setIsAuthenticated(false);
-        }
-      } else {
-        console.log('AuthContext - No token found');
-      }
-      setLoading(false);
-    };
-
-    loadUser();
-  }, [token]);
-
-  const register = async (formData) => {
+  const login = async (credentials) => {
     try {
-      console.log('AuthContext - Attempting registration');
-      const response = await authService.register(formData);
-      
-      if (response.status === 'success' && response.data) {
-        const { token: newToken, user: newUser } = response.data;
-        
-        // Check if user has the required profile for their role
-        const hasRequiredProfile = (
-          (newUser.role === 'staff' && newUser.staffProfile) ||
-          (newUser.role === 'doctor' && newUser.doctorProfile) ||
-          (newUser.role === 'patient' && newUser.patientProfile)
-        );
+      setLoading(true);
+      const { user } = await authService.login(credentials.email, credentials.password);
+      setUser(user);
 
-        if (!hasRequiredProfile) {
-          throw new Error('Profile not found. Please contact administrator.');
-        }
-
-        console.log('AuthContext - Registration successful:', {
-          role: newUser.role,
-          hasProfile: hasRequiredProfile
-        });
-
-        // Store token and user data
-        localStorage.setItem('token', newToken);
-        localStorage.setItem('user', JSON.stringify(newUser));
-        setToken(newToken);
-        setUser(newUser);
-        setIsAuthenticated(true);
-        
-        return { 
-          success: true,
-          data: {
-            user: newUser
-          }
-        };
-      } else {
-        throw new Error('Invalid response format from server');
+      // Navigate based on role
+      switch (user.role) {
+        case 'doctor':
+          navigate('/doctor/dashboard');
+          break;
+        case 'staff':
+          navigate('/staff/dashboard');
+          break;
+        case 'patient':
+          navigate('/patient/dashboard');
+          break;
+        default:
+          navigate('/');
       }
+
+      showAlert('Login successful', 'success');
     } catch (error) {
-      console.error('AuthContext - Registration error:', error);
-      
-      return { 
-        success: false, 
-        error: error.message || 'Registration failed. Please try again.'
-      };
+      showAlert(error.message, 'error');
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const login = async (formData) => {
+  const register = async (userData) => {
     try {
-      console.log('AuthContext - Attempting login');
-      const response = await authService.login(formData);
-      
-      if (response.status === 'success' && response.data) {
-        const { token: newToken, user: newUser } = response.data;
-        
-        // Check if user has the required profile for their role
-        const hasRequiredProfile = (
-          (newUser.role === 'staff' && newUser.staffProfile) ||
-          (newUser.role === 'doctor' && newUser.doctorProfile) ||
-          (newUser.role === 'patient' && newUser.patientProfile)
-        );
-
-        if (!hasRequiredProfile) {
-          throw new Error('Profile not found. Please contact administrator.');
-        }
-
-        console.log('AuthContext - Login successful:', {
-          role: newUser.role,
-          hasProfile: hasRequiredProfile
-        });
-
-        // Store token and user data
-        localStorage.setItem('token', newToken);
-        localStorage.setItem('user', JSON.stringify(newUser));
-        setToken(newToken);
-        setUser(newUser);
-        setIsAuthenticated(true);
-        
-        return { 
-          success: true,
-          data: {
-            user: newUser
-          }
-        };
-      } else {
-        throw new Error('Invalid response format from server');
-      }
+      setLoading(true);
+      const { user } = await authService.register(userData);
+      setUser(user);
+      navigate(`/${user.role}/dashboard`);
+      showAlert('Registration successful', 'success');
     } catch (error) {
-      console.error('AuthContext - Login error:', error);
-      
-      return { 
-        success: false, 
-        error: error.message || 'Login failed. Please try again.'
-      };
+      showAlert(error.message, 'error');
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = () => {
-    console.log('AuthContext - Logging out');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
     setUser(null);
-    setIsAuthenticated(false);
-    window.location.href = '/login';
+    authService.logout();
+    showAlert('Logged out successfully', 'success');
+  };
+
+  const updateProfile = async (profileData) => {
+    try {
+      setLoading(true);
+      const updatedProfile = await authService.updateProfile(profileData);
+      setUser(prev => ({ ...prev, profile: updatedProfile }));
+      showAlert('Profile updated successfully', 'success');
+    } catch (error) {
+      showAlert(error.message, 'error');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const value = {
+    user,
+    loading,
+    login,
+    register,
+    logout,
+    updateProfile,
+    isAuthenticated: !!user,
+    role: user?.role
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isAuthenticated,
-        isLoading,
-        register,
-        login,
-        logout
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export default AuthContext;
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

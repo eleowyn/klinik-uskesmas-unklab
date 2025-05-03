@@ -1,213 +1,181 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
-import { AlertContext } from '../../context/AlertContext';
-import { getPatients, getTransactions, getAppointments } from '../../services/staffService';
+import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useStaffContext } from '../../context/StaffContext';
+
+const DashboardCard = ({ title, value, icon, color, link }) => (
+  <Link 
+    to={link} 
+    className={`bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200`}
+  >
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
+        <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+      </div>
+      <div className={`w-12 h-12 rounded-full ${color} flex items-center justify-center`}>
+        <i className={`${icon} text-white text-xl`}></i>
+      </div>
+    </div>
+  </Link>
+);
+
+const AppointmentItem = ({ appointment }) => (
+  <div className="flex items-center p-4 bg-white rounded-lg border border-gray-100 mb-3 hover:shadow-sm transition-shadow">
+    <div className="w-2 h-2 rounded-full bg-blue-500 mr-4"></div>
+    <div className="flex-1">
+      <h4 className="font-medium text-gray-800">
+        {appointment.patientName} 
+        <span className="text-gray-500 text-sm ml-2">
+          with Dr. {appointment.doctorName}
+        </span>
+      </h4>
+      <p className="text-sm text-gray-500">
+        {new Date(appointment.date).toLocaleString()}
+      </p>
+    </div>
+    <div className={`px-3 py-1 rounded-full text-sm ${
+      appointment.status === 'completed' ? 'bg-green-100 text-green-700' :
+      appointment.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+      'bg-blue-100 text-blue-700'
+    }`}>
+      {appointment.status}
+    </div>
+  </div>
+);
+
+const TransactionItem = ({ transaction }) => (
+  <div className="flex items-center p-4 bg-white rounded-lg border border-gray-100 mb-3 hover:shadow-sm transition-shadow">
+    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-4">
+      <i className="fas fa-file-invoice-dollar text-green-500"></i>
+    </div>
+    <div className="flex-1">
+      <h4 className="font-medium text-gray-800">{transaction.patientName}</h4>
+      <p className="text-sm text-gray-500">
+        {new Date(transaction.date).toLocaleDateString()}
+      </p>
+    </div>
+    <div className="text-right">
+      <p className="font-medium text-gray-800">${transaction.amount}</p>
+      <p className={`text-sm ${
+        transaction.status === 'paid' ? 'text-green-600' :
+        transaction.status === 'pending' ? 'text-yellow-600' :
+        'text-red-600'
+      }`}>
+        {transaction.status}
+      </p>
+    </div>
+  </div>
+);
 
 const StaffDashboard = () => {
-  const { user, isAuthenticated } = useContext(AuthContext);
-  const { showAlert } = useContext(AlertContext);
-  const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    patients: 0,
-    transactions: 0,
-    appointments: 0,
-    revenue: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { dashboardData, refreshDashboardData, loading } = useStaffContext();
+  const { patients, appointments, transactions } = dashboardData;
 
   useEffect(() => {
-    // Check if user is authenticated and has staff role
-    if (!isAuthenticated || !user || user.role !== 'staff') {
-      navigate('/login');
-      return;
-    }
-
-    let isMounted = true;
-
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const [patientsRes, transactionsRes, appointmentsRes] = await Promise.all([
-          getPatients(),
-          getTransactions(),
-          getAppointments(),
-        ]);
-        
-        if (!isMounted) return;
-
-        // Calculate total revenue from transactions
-        const totalRevenue = Array.isArray(transactionsRes) ? 
-          transactionsRes.reduce((sum, t) => sum + (t.totalAmount || 0), 0) : 0;
-        
-        setStats({
-          patients: Array.isArray(patientsRes) ? patientsRes.length : 0,
-          transactions: Array.isArray(transactionsRes) ? transactionsRes.length : 0,
-          appointments: Array.isArray(appointmentsRes) ? appointmentsRes.length : 0,
-          revenue: totalRevenue,
-        });
-      } catch (err) {
-        if (!isMounted) return;
-        console.error('Error fetching stats:', err);
-        setError(err.message || 'Failed to fetch dashboard data');
-        showAlert(err.message || 'Failed to fetch dashboard data', 'error');
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-    
-    fetchStats();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isAuthenticated, user, navigate, showAlert]);
-
-  if (!isAuthenticated || !user || user.role !== 'staff') {
-    return null; // Let the useEffect handle redirection
-  }
+    refreshDashboardData();
+  }, [refreshDashboardData]);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center p-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-          <strong className="font-bold">Error: </strong>
-          <span className="block sm:inline">{error}</span>
-        </div>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+  // Get today's appointments
+  const todayAppointments = appointments.filter(apt => {
+    const aptDate = new Date(apt.date);
+    const today = new Date();
+    return aptDate.toDateString() === today.toDateString();
+  });
+
+  // Get recent transactions
+  const recentTransactions = transactions.slice(0, 5);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        Welcome, {user.staffProfile?.fullName || 'Staff Member'}
-      </h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
-              <i className="fas fa-procedures text-xl"></i>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700">Patients</h3>
-              <p className="text-2xl font-bold">{stats.patients}</p>
-            </div>
-          </div>
-          <Link 
-            to="/staff/patients" 
-            className="mt-4 inline-block text-blue-600 hover:underline"
-          >
-            View Patients
-          </Link>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-100 text-green-600 mr-4">
-              <i className="fas fa-receipt text-xl"></i>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700">Transactions</h3>
-              <p className="text-2xl font-bold">{stats.transactions}</p>
-            </div>
-          </div>
-          <Link 
-            to="/staff/transactions" 
-            className="mt-4 inline-block text-blue-600 hover:underline"
-          >
-            View Transactions
-          </Link>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
-              <i className="fas fa-calendar-alt text-xl"></i>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700">Appointments</h3>
-              <p className="text-2xl font-bold">{stats.appointments}</p>
-            </div>
-          </div>
-          <Link 
-            to="/staff/appointments" 
-            className="mt-4 inline-block text-blue-600 hover:underline"
-          >
-            View Appointments
-          </Link>
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
-              <i className="fas fa-money-bill-wave text-xl"></i>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700">Revenue</h3>
-              <p className="text-2xl font-bold">Rp{stats.revenue.toLocaleString()}</p>
-            </div>
-          </div>
-          <Link 
-            to="/staff/transactions" 
-            className="mt-4 inline-block text-blue-600 hover:underline"
-          >
-            View Details
-          </Link>
-        </div>
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white mb-6">
+        <h1 className="text-2xl font-bold mb-2">
+          Welcome back, {dashboardData.staffProfile?.fullName}
+        </h1>
+        <p className="opacity-90">Here's what's happening at the clinic today</p>
       </div>
-      
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link 
-            to="/staff/transactions/new" 
-            className="bg-blue-100 hover:bg-blue-200 text-blue-800 p-4 rounded-lg text-center transition"
-          >
-            <i className="fas fa-cash-register text-2xl mb-2"></i>
-            <p>Create Transaction</p>
-          </Link>
-          <Link 
-            to="/staff/patients/new" 
-            className="bg-green-100 hover:bg-green-200 text-green-800 p-4 rounded-lg text-center transition"
-          >
-            <i className="fas fa-user-plus text-2xl mb-2"></i>
-            <p>Register Patient</p>
-          </Link>
-          <Link 
-            to="/staff/appointments/new" 
-            className="bg-purple-100 hover:bg-purple-200 text-purple-800 p-4 rounded-lg text-center transition"
-          >
-            <i className="fas fa-calendar-plus text-2xl mb-2"></i>
-            <p>Schedule Appointment</p>
-          </Link>
-          <Link 
-            to="/staff/reports" 
-            className="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 p-4 rounded-lg text-center transition"
-          >
-            <i className="fas fa-file-invoice-dollar text-2xl mb-2"></i>
-            <p>Generate Report</p>
-          </Link>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <DashboardCard
+          title="Total Patients"
+          value={patients.length}
+          icon="fas fa-users"
+          color="bg-blue-500"
+          link="/staff/patients"
+        />
+        <DashboardCard
+          title="Today's Appointments"
+          value={todayAppointments.length}
+          icon="fas fa-calendar-check"
+          color="bg-green-500"
+          link="/staff/appointments"
+        />
+        <DashboardCard
+          title="Pending Payments"
+          value={transactions.filter(t => t.status === 'pending').length}
+          icon="fas fa-file-invoice-dollar"
+          color="bg-yellow-500"
+          link="/staff/transactions"
+        />
+        <DashboardCard
+          title="Total Revenue Today"
+          value={`$${transactions
+            .filter(t => new Date(t.date).toDateString() === new Date().toDateString())
+            .reduce((sum, t) => sum + (t.amount || 0), 0)
+            .toFixed(2)}`}
+          icon="fas fa-chart-line"
+          color="bg-purple-500"
+          link="/staff/transactions"
+        />
+      </div>
+
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Today's Appointments */}
+        <div className="bg-white rounded-lg p-6 border border-gray-100">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-800">Today's Appointments</h2>
+            <Link to="/staff/appointments" className="text-blue-500 hover:text-blue-600 text-sm">
+              View All
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {todayAppointments.length > 0 ? (
+              todayAppointments.map(appointment => (
+                <AppointmentItem key={appointment._id} appointment={appointment} />
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-4">No appointments for today</p>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="bg-white rounded-lg p-6 border border-gray-100">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-800">Recent Transactions</h2>
+            <Link to="/staff/transactions" className="text-blue-500 hover:text-blue-600 text-sm">
+              View All
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {recentTransactions.length > 0 ? (
+              recentTransactions.map(transaction => (
+                <TransactionItem key={transaction._id} transaction={transaction} />
+              ))
+            ) : (
+              <p className="text-gray-500 text-center py-4">No recent transactions</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

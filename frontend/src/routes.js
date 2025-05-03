@@ -7,10 +7,16 @@ import Register from './pages/Register';
 import DoctorPortal from './pages/DoctorPortal';
 import StaffPortal from './pages/StaffPortal';
 import PatientPortal from './pages/PatientPortal';
+
+// Doctor Components
 import DoctorDashboard from './components/doctor/DoctorDashboard';
 import PatientList from './components/doctor/PatientList';
 import PatientDetails from './components/doctor/PatientDetails';
 import PrescriptionForm from './components/doctor/PrescriptionForm';
+import PrescriptionList from './components/doctor/PrescriptionList';
+import Schedule from './components/doctor/Schedule';
+
+// Staff Components
 import StaffDashboard from './components/staff/StaffDashboard';
 import PatientManagement from './components/staff/PatientManagement';
 import PatientForm from './components/staff/PatientForm';
@@ -19,6 +25,7 @@ import TransactionManagement from './components/staff/TransactionManagement';
 import TransactionDetail from './components/staff/TransactionDetail';
 import AppointmentManagement from './components/staff/AppointmentManagement';
 import AppointmentForm from './components/staff/AppointmentForm';
+
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 const routes = [
@@ -52,51 +59,27 @@ const routes = [
       },
       {
         path: 'dashboard',
-        element: (
-          <ProtectedRoute allowedRoles={['doctor']}>
-            <DoctorDashboard />
-          </ProtectedRoute>
-        )
+        element: <DoctorDashboard />
       },
       {
         path: 'patients',
-        element: (
-          <ProtectedRoute allowedRoles={['doctor']}>
-            <PatientList />
-          </ProtectedRoute>
-        )
+        element: <PatientList />
       },
       {
         path: 'patients/:id',
-        element: (
-          <ProtectedRoute allowedRoles={['doctor']}>
-            <PatientDetails />
-          </ProtectedRoute>
-        )
+        element: <PatientDetails />
+      },
+      {
+        path: 'prescriptions',
+        element: <PrescriptionList />
       },
       {
         path: 'prescriptions/new',
-        element: (
-          <ProtectedRoute allowedRoles={['doctor']}>
-            <PrescriptionForm />
-          </ProtectedRoute>
-        )
+        element: <PrescriptionForm />
       },
       {
-        path: 'appointments',
-        element: (
-          <ProtectedRoute allowedRoles={['doctor']}>
-            <AppointmentManagement />
-          </ProtectedRoute>
-        )
-      },
-      {
-        path: 'appointments/new',
-        element: (
-          <ProtectedRoute allowedRoles={['doctor']}>
-            <AppointmentForm />
-          </ProtectedRoute>
-        )
+        path: 'schedule',
+        element: <Schedule />
       }
     ]
   },
@@ -114,96 +97,52 @@ const routes = [
       },
       {
         path: 'dashboard',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <StaffDashboard />
-          </ProtectedRoute>
-        )
+        element: <StaffDashboard />
       },
       {
         path: 'patients',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <PatientManagement />
-          </ProtectedRoute>
-        )
+        element: <PatientManagement />
       },
       {
         path: 'patients/new',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <PatientForm />
-          </ProtectedRoute>
-        )
+        element: <PatientForm />
       },
       {
         path: 'patients/:id/edit',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <PatientForm />
-          </ProtectedRoute>
-        )
+        element: <PatientForm />
       },
       {
         path: 'transactions',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <TransactionManagement />
-          </ProtectedRoute>
-        )
+        element: <TransactionManagement />
       },
       {
         path: 'transactions/new',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <TransactionForm />
-          </ProtectedRoute>
-        )
+        element: <TransactionForm />
       },
       {
         path: 'transactions/:id',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <TransactionDetail />
-          </ProtectedRoute>
-        )
+        element: <TransactionDetail />
       },
       {
         path: 'transactions/:id/edit',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <TransactionForm />
-          </ProtectedRoute>
-        )
+        element: <TransactionForm />
       },
       {
         path: 'appointments',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <AppointmentManagement />
-          </ProtectedRoute>
-        )
+        element: <AppointmentManagement />
       },
       {
         path: 'appointments/new',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <AppointmentForm />
-          </ProtectedRoute>
-        )
+        element: <AppointmentForm />
       },
       {
         path: 'appointments/:id/edit',
-        element: (
-          <ProtectedRoute allowedRoles={['staff']}>
-            <AppointmentForm />
-          </ProtectedRoute>
-        )
+        element: <AppointmentForm />
       }
     ]
   },
   {
-    path: '/patient/*',
+    path: '/patient',
     element: (
       <ProtectedRoute allowedRoles={['patient']}>
         <PatientPortal />
@@ -211,7 +150,6 @@ const routes = [
     )
   },
   {
-    // Catch all route - redirect to home
     path: '*',
     element: <Navigate to="/" replace />
   }

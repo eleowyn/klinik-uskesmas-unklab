@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AlertContext } from '../../context/AlertContext';
-import { getPatients, getAppointment, createAppointment, updateAppointment, getDoctors } from '../../services/staffService';
+import { getAllPatients, getAppointmentDetails, createAppointment, updateAppointment, getDoctors } from '../../services/staffService';
 
 const AppointmentForm = () => {
   const { id } = useParams();
@@ -25,7 +25,7 @@ const AppointmentForm = () => {
       try {
         setLoading(true);
         const [patientsData, doctorsData] = await Promise.all([
-          getPatients(),
+          getAllPatients(),
           getDoctors()
         ]);
         console.log('Fetched doctors:', doctorsData); // Debugging log
@@ -33,7 +33,7 @@ const AppointmentForm = () => {
         setDoctors(doctorsData);
 
         if (id) {
-          const appointmentData = await getAppointment(id);
+          const appointmentData = await getAppointmentDetails(id);
           setFormData({
             patientId: appointmentData.patient._id,
             doctorId: appointmentData.doctor._id,
@@ -121,7 +121,7 @@ const AppointmentForm = () => {
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
-              <option value="">Select Patientt</option>
+              <option value="">Select Patient</option>
               {patients.map(patient => (
                 <option key={patient._id} value={patient._id}>
                   {patient.fullName}

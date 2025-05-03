@@ -1,293 +1,308 @@
-const doctorService = require('../services/doctorService');
+const Doctor = require('../models/Doctor');
+const Patient = require('../models/Patient');
+const Prescription = require('../models/Prescription');
+const Appointment = require('../models/Appointment');
 const { responseFormatter } = require('../utils/responseFormatter');
 
-const getProfile = async (req, res) => {
+// Profile
+exports.getProfile = async (req, res) => {
   try {
-    console.log('Getting doctor profile for user:', req.user.id);
-    const profile = await doctorService.getDoctorProfile(req.user.id);
+    const doctorProfile = await Doctor.findOne({ user: req.user.id })
+      .populate('user', '-password');
+
+    if (!doctorProfile) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor profile not found'
+      }));
+    }
+
     res.json(responseFormatter({
       status: 'success',
-      data: profile
+      data: doctorProfile
     }));
   } catch (error) {
     console.error('Error in getProfile:', error);
-    res.status(400).json(responseFormatter({
+    res.status(500).json(responseFormatter({
       status: 'error',
       message: error.message
     }));
   }
 };
 
-const getDoctor = async (req, res) => {
+// Patients
+exports.getPatients = async (req, res) => {
   try {
-    console.log('Getting doctor by ID:', req.params.id);
-    const doctor = await doctorService.getDoctorById(req.params.id);
-    if (!doctor) {
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
       return res.status(404).json(responseFormatter({
         status: 'error',
-        message: 'Doctor not found'
+        message: 'Doctor profile not found'
       }));
     }
-    res.json(responseFormatter({
-      status: 'success',
-      data: doctor
-    }));
-  } catch (error) {
-    console.error('Error in getDoctor:', error);
-    res.status(400).json(responseFormatter({
-      status: 'error',
-      message: error.message
-    }));
-  }
-};
 
-const getDoctors = async (req, res) => {
-  try {
-    console.log('Getting all doctors');
-    const doctors = await doctorService.getAllDoctors();
-    res.json(responseFormatter({
-      status: 'success',
-      data: doctors
-    }));
-  } catch (error) {
-    console.error('Error in getDoctors:', error);
-    res.status(400).json(responseFormatter({
-      status: 'error',
-      message: error.message
-    }));
-  }
-};
+    const patients = await Patient.find({ doctors: doctorProfile._id })
+      .populate('user', '-password')
+      .sort({ fullName: 1 });
 
-const updateProfile = async (req, res) => {
-  try {
-    console.log('Updating doctor profile:', req.doctorProfile._id);
-    const updatedProfile = await doctorService.updateDoctorProfile(req.doctorProfile._id, req.body);
-    res.json(responseFormatter({
-      status: 'success',
-      data: updatedProfile
-    }));
-  } catch (error) {
-    console.error('Error in updateProfile:', error);
-    res.status(400).json(responseFormatter({
-      status: 'error',
-      message: error.message
-    }));
-  }
-};
-
-const getDoctorPatients = async (req, res) => {
-  try {
-    console.log('Getting patients for doctor:', req.doctorProfile._id);
-    const patients = await doctorService.getDoctorPatients(req.doctorProfile._id);
     res.json(responseFormatter({
       status: 'success',
       data: patients
     }));
   } catch (error) {
-    console.error('Error in getDoctorPatients:', error);
-    res.status(400).json(responseFormatter({
+    console.error('Error in getPatients:', error);
+    res.status(500).json(responseFormatter({
       status: 'error',
       message: error.message
     }));
   }
 };
 
-const getPatientDetails = async (req, res) => {
+// Assign patient to doctor
+exports.assignPatientToDoctor = async (req, res) => {
   try {
-    console.log('Getting patient details:', req.params.id, 'for doctor:', req.doctorProfile._id);
-    const patient = await doctorService.getPatientDetails(req.doctorProfile._id, req.params.id);
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor profile not found'
+      }));
+    }
+
+    const patientId = req.params.patientId;
+    const patient = await Patient.findById(patientId);
+
     if (!patient) {
       return res.status(404).json(responseFormatter({
         status: 'error',
         message: 'Patient not found'
       }));
     }
+
+    // Check if doctor is already assigned
+    if (patient.doctors.includes(doctorProfile._id)) {
+      return res.status(400).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor already assigned to this patient'
+      }));
+    }
+
+    // Add doctor to patient's doctors array
+    patient.doctors.push(doctorProfile._id);
+    await patient.save();
+
+    res.json(responseFormatter({
+      status: 'success',
+      message: 'Doctor assigned to patient successfully',
+      data: patient
+    }));
+  } catch (error) {
+    console.error('Error in assignPatientToDoctor:', error);
+    res.status(500).json(responseFormatter({
+      status: 'error',
+      message: error.message
+    }));
+  }
+};
+
+exports.getPatientDetails = async (req, res) => {
+  try {
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor profile not found'
+      }));
+    }
+
+    const patient = await Patient.findById(req.params.id)
+      .populate('user', '-password');
+
+    if (!patient) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Patient not found'
+      }));
+    }
+
+    if (!patient.doctors.includes(doctorProfile._id)) {
+      return res.status(403).json(responseFormatter({
+        status: 'error',
+        message: 'Not authorized to view this patient'
+      }));
+    }
+
     res.json(responseFormatter({
       status: 'success',
       data: patient
     }));
   } catch (error) {
     console.error('Error in getPatientDetails:', error);
-    res.status(400).json(responseFormatter({
+    res.status(500).json(responseFormatter({
       status: 'error',
       message: error.message
     }));
   }
 };
 
-const createPrescription = async (req, res) => {
+// Prescriptions
+exports.getPrescriptions = async (req, res) => {
   try {
-    console.log('Creating prescription for doctor:', req.doctorProfile._id);
-    const prescription = await doctorService.createPrescription(req.doctorProfile._id, req.body);
-    res.status(201).json(responseFormatter({
-      status: 'success',
-      data: prescription
-    }));
-  } catch (error) {
-    console.error('Error in createPrescription:', error);
-    res.status(400).json(responseFormatter({
-      status: 'error',
-      message: error.message
-    }));
-  }
-};
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor profile not found'
+      }));
+    }
 
-const getPrescriptions = async (req, res) => {
-  try {
-    console.log('Getting prescriptions for doctor:', req.doctorProfile._id);
-    const prescriptions = await doctorService.getDoctorPrescriptions(req.doctorProfile._id);
+    const prescriptions = await Prescription.find({ doctor: doctorProfile._id })
+      .populate('patient', 'fullName')
+      .sort({ date: -1 });
+
     res.json(responseFormatter({
       status: 'success',
       data: prescriptions
     }));
   } catch (error) {
     console.error('Error in getPrescriptions:', error);
-    res.status(400).json(responseFormatter({
+    res.status(500).json(responseFormatter({
       status: 'error',
       message: error.message
     }));
   }
 };
 
-const getPrescription = async (req, res) => {
+exports.createPrescription = async (req, res) => {
   try {
-    console.log('Getting prescription:', req.params.id, 'for doctor:', req.doctorProfile._id);
-    const prescription = await doctorService.getPrescriptionDetails(req.doctorProfile._id, req.params.id);
-    if (!prescription) {
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
       return res.status(404).json(responseFormatter({
         status: 'error',
-        message: 'Prescription not found'
+        message: 'Doctor profile not found'
       }));
     }
-    res.json(responseFormatter({
+
+    const prescription = new Prescription({
+      ...req.body,
+      doctor: doctorProfile._id,
+      date: new Date()
+    });
+
+    await prescription.save();
+
+    res.status(201).json(responseFormatter({
       status: 'success',
       data: prescription
     }));
   } catch (error) {
-    console.error('Error in getPrescription:', error);
-    res.status(400).json(responseFormatter({
+    console.error('Error in createPrescription:', error);
+    res.status(500).json(responseFormatter({
       status: 'error',
       message: error.message
     }));
   }
 };
 
-const updatePrescription = async (req, res) => {
+// Appointments
+exports.getAppointments = async (req, res) => {
   try {
-    console.log('Updating prescription:', req.params.id, 'for doctor:', req.doctorProfile._id);
-    const prescription = await doctorService.updatePrescription(req.doctorProfile._id, req.params.id, req.body);
-    if (!prescription) {
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
       return res.status(404).json(responseFormatter({
         status: 'error',
-        message: 'Prescription not found'
+        message: 'Doctor profile not found'
       }));
     }
-    res.json(responseFormatter({
-      status: 'success',
-      data: prescription
-    }));
-  } catch (error) {
-    console.error('Error in updatePrescription:', error);
-    res.status(400).json(responseFormatter({
-      status: 'error',
-      message: error.message
-    }));
-  }
-};
 
-const getDoctorAppointments = async (req, res) => {
-  try {
-    console.log('Getting appointments for doctor:', req.doctorProfile._id);
-    const appointments = await doctorService.getDoctorAppointments(req.doctorProfile._id);
+    const appointments = await Appointment.find({ doctor: doctorProfile._id })
+      .populate('patient', 'fullName')
+      .sort({ date: 1 });
+
     res.json(responseFormatter({
       status: 'success',
       data: appointments
     }));
   } catch (error) {
-    console.error('Error in getDoctorAppointments:', error);
-    res.status(400).json(responseFormatter({
+    console.error('Error in getAppointments:', error);
+    res.status(500).json(responseFormatter({
       status: 'error',
       message: error.message
     }));
   }
 };
 
-const createAppointment = async (req, res) => {
+exports.updateAppointment = async (req, res) => {
   try {
-    console.log('Creating appointment for doctor:', req.doctorProfile._id);
-    const appointment = await doctorService.createAppointment(req.doctorProfile._id, req.body);
-    res.status(201).json(responseFormatter({
-      status: 'success',
-      data: appointment
-    }));
-  } catch (error) {
-    console.error('Error in createAppointment:', error);
-    res.status(400).json(responseFormatter({
-      status: 'error',
-      message: error.message
-    }));
-  }
-};
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor profile not found'
+      }));
+    }
 
-const getAppointmentDetails = async (req, res) => {
-  try {
-    console.log('Getting appointment:', req.params.id, 'for doctor:', req.doctorProfile._id);
-    const appointment = await doctorService.getAppointmentDetails(req.doctorProfile._id, req.params.id);
+    const appointment = await Appointment.findOne({
+      _id: req.params.id,
+      doctor: doctorProfile._id
+    });
+
     if (!appointment) {
       return res.status(404).json(responseFormatter({
         status: 'error',
         message: 'Appointment not found'
       }));
     }
-    res.json(responseFormatter({
-      status: 'success',
-      data: appointment
-    }));
-  } catch (error) {
-    console.error('Error in getAppointmentDetails:', error);
-    res.status(400).json(responseFormatter({
-      status: 'error',
-      message: error.message
-    }));
-  }
-};
 
-const updateAppointment = async (req, res) => {
-  try {
-    console.log('Updating appointment:', req.params.id, 'for doctor:', req.doctorProfile._id);
-    const appointment = await doctorService.updateAppointment(req.doctorProfile._id, req.params.id, req.body);
-    if (!appointment) {
-      return res.status(404).json(responseFormatter({
-        status: 'error',
-        message: 'Appointment not found'
-      }));
-    }
+    Object.assign(appointment, req.body);
+    await appointment.save();
+
     res.json(responseFormatter({
       status: 'success',
       data: appointment
     }));
   } catch (error) {
     console.error('Error in updateAppointment:', error);
-    res.status(400).json(responseFormatter({
+    res.status(500).json(responseFormatter({
       status: 'error',
       message: error.message
     }));
   }
 };
 
-module.exports = {
-  getProfile,
-  getDoctor,
-  getDoctors,
-  updateProfile,
-  getDoctorPatients,
-  getPatientDetails,
-  createPrescription,
-  getPrescriptions,
-  getPrescription,
-  updatePrescription,
-  getDoctorAppointments,
-  createAppointment,
-  getAppointmentDetails,
-  updateAppointment
+// Schedule
+exports.getSchedule = async (req, res) => {
+  try {
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor profile not found'
+      }));
+    }
+
+    const { startDate, endDate } = req.query;
+    const query = {
+      doctor: doctorProfile._id,
+      date: {}
+    };
+
+    if (startDate) query.date.$gte = new Date(startDate);
+    if (endDate) query.date.$lte = new Date(endDate);
+
+    const appointments = await Appointment.find(query)
+      .populate('patient', 'fullName')
+      .sort({ date: 1 });
+
+    res.json(responseFormatter({
+      status: 'success',
+      data: appointments
+    }));
+  } catch (error) {
+    console.error('Error in getSchedule:', error);
+    res.status(500).json(responseFormatter({
+      status: 'error',
+      message: error.message
+    }));
+  }
 };

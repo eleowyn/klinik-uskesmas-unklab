@@ -1,161 +1,189 @@
 import api from './authService';
 
-// Cache for profile data
-let profileCache = null;
-let lastProfileFetch = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-const handleResponse = (response) => {
-  if (response.data?.status === 'success') {
-    return response.data.data;
-  }
-  throw new Error(response.data?.message || 'An error occurred');
-};
-
+// Doctor Profile
 export const getDoctorProfile = async () => {
   try {
-    // Check cache first
-    const now = Date.now();
-    if (profileCache && (now - lastProfileFetch < CACHE_DURATION)) {
-      console.log('Using cached profile data');
-      return profileCache;
-    }
-
-    console.log('Fetching doctor profile');
     const response = await api.get('/doctors/profile');
-    const data = handleResponse(response);
-    
-    // Update cache
-    profileCache = data;
-    lastProfileFetch = now;
-    
-    return data;
+    return response.data.data;
   } catch (error) {
     console.error('Error fetching doctor profile:', error);
-    throw error;
+    throw error.response?.data?.message || 'Failed to fetch doctor profile';
   }
 };
 
+// Patient Management
 export const getDoctorPatients = async () => {
   try {
-    console.log('Fetching doctor patients');
     const response = await api.get('/doctors/patients');
-    return handleResponse(response);
+    return response.data.data;
   } catch (error) {
-    console.error('Error fetching doctor patients:', error);
-    throw error;
-  }
-};
-
-export const getDoctorPrescriptions = async () => {
-  try {
-    console.log('Fetching doctor prescriptions');
-    const response = await api.get('/doctors/prescriptions');
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Error fetching doctor prescriptions:', error);
-    throw error;
-  }
-};
-
-export const getDoctorAppointments = async () => {
-  try {
-    console.log('Fetching doctor appointments');
-    const response = await api.get('/doctors/appointments');
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Error fetching doctor appointments:', error);
-    throw error;
-  }
-};
-
-export const createPrescription = async (prescriptionData) => {
-  try {
-    console.log('Creating prescription');
-    const response = await api.post('/doctors/prescriptions', prescriptionData);
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Error creating prescription:', error);
-    throw error;
-  }
-};
-
-export const getPrescriptionDetails = async (prescriptionId) => {
-  try {
-    console.log('Fetching prescription details:', prescriptionId);
-    const response = await api.get(`/doctors/prescriptions/${prescriptionId}`);
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Error fetching prescription details:', error);
-    throw error;
-  }
-};
-
-export const updatePrescription = async (prescriptionId, updateData) => {
-  try {
-    console.log('Updating prescription:', prescriptionId);
-    const response = await api.put(`/doctors/prescriptions/${prescriptionId}`, updateData);
-    return handleResponse(response);
-  } catch (error) {
-    console.error('Error updating prescription:', error);
-    throw error;
+    console.error('Error fetching patients:', error);
+    throw error.response?.data?.message || 'Failed to fetch patients';
   }
 };
 
 export const getPatientDetails = async (patientId) => {
   try {
-    console.log('Fetching patient details:', patientId);
     const response = await api.get(`/doctors/patients/${patientId}`);
-    return handleResponse(response);
+    return response.data.data;
   } catch (error) {
     console.error('Error fetching patient details:', error);
-    throw error;
+    throw error.response?.data?.message || 'Failed to fetch patient details';
   }
 };
 
-export const createAppointment = async (appointmentData) => {
+export const addPatient = async (patientData) => {
   try {
-    console.log('Creating appointment');
-    const response = await api.post('/doctors/appointments', appointmentData);
-    return handleResponse(response);
+    const response = await api.post('/doctors/patients', patientData);
+    return response.data.data;
   } catch (error) {
-    console.error('Error creating appointment:', error);
-    throw error;
+    console.error('Error adding patient:', error);
+    throw error.response?.data?.message || 'Failed to add patient';
   }
 };
 
-export const updateAppointment = async (appointmentId, updateData) => {
+// Prescription Management
+export const getDoctorPrescriptions = async () => {
   try {
-    console.log('Updating appointment:', appointmentId);
-    const response = await api.put(`/doctors/appointments/${appointmentId}`, updateData);
-    return handleResponse(response);
+    const response = await api.get('/doctors/prescriptions');
+    return response.data.data;
   } catch (error) {
-    console.error('Error updating appointment:', error);
-    throw error;
+    console.error('Error fetching prescriptions:', error);
+    throw error.response?.data?.message || 'Failed to fetch prescriptions';
+  }
+};
+
+export const getPrescriptionDetails = async (prescriptionId) => {
+  try {
+    const response = await api.get(`/doctors/prescriptions/${prescriptionId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching prescription details:', error);
+    throw error.response?.data?.message || 'Failed to fetch prescription details';
+  }
+};
+
+export const createPrescription = async (prescriptionData) => {
+  try {
+    const response = await api.post('/doctors/prescriptions', prescriptionData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating prescription:', error);
+    throw error.response?.data?.message || 'Failed to create prescription';
+  }
+};
+
+export const updatePrescription = async (prescriptionId, updateData) => {
+  try {
+    const response = await api.put(`/doctors/prescriptions/${prescriptionId}`, updateData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error updating prescription:', error);
+    throw error.response?.data?.message || 'Failed to update prescription';
+  }
+};
+
+export const deletePrescription = async (prescriptionId) => {
+  try {
+    const response = await api.delete(`/doctors/prescriptions/${prescriptionId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error deleting prescription:', error);
+    throw error.response?.data?.message || 'Failed to delete prescription';
+  }
+};
+
+// Appointment Management
+export const getDoctorAppointments = async () => {
+  try {
+    const response = await api.get('/doctors/appointments');
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    throw error.response?.data?.message || 'Failed to fetch appointments';
   }
 };
 
 export const getAppointmentDetails = async (appointmentId) => {
   try {
-    console.log('Fetching appointment details:', appointmentId);
     const response = await api.get(`/doctors/appointments/${appointmentId}`);
-    return handleResponse(response);
+    return response.data.data;
   } catch (error) {
     console.error('Error fetching appointment details:', error);
-    throw error;
+    throw error.response?.data?.message || 'Failed to fetch appointment details';
   }
 };
 
-export default {
+export const createAppointment = async (appointmentData) => {
+  try {
+    const response = await api.post('/doctors/appointments', appointmentData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error creating appointment:', error);
+    throw error.response?.data?.message || 'Failed to create appointment';
+  }
+};
+
+export const updateAppointment = async (appointmentId, updateData) => {
+  try {
+    const response = await api.put(`/doctors/appointments/${appointmentId}`, updateData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error updating appointment:', error);
+    throw error.response?.data?.message || 'Failed to update appointment';
+  }
+};
+
+export const deleteAppointment = async (appointmentId) => {
+  try {
+    const response = await api.delete(`/doctors/appointments/${appointmentId}`);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error deleting appointment:', error);
+    throw error.response?.data?.message || 'Failed to delete appointment';
+  }
+};
+
+// Schedule Management
+export const getDoctorSchedule = async (startDate, endDate) => {
+  try {
+    const response = await api.get('/doctors/schedule', {
+      params: { startDate, endDate }
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error('Error fetching schedule:', error);
+    throw error.response?.data?.message || 'Failed to fetch schedule';
+  }
+};
+
+export const updateSchedule = async (scheduleData) => {
+  try {
+    const response = await api.put('/doctors/schedule', scheduleData);
+    return response.data.data;
+  } catch (error) {
+    console.error('Error updating schedule:', error);
+    throw error.response?.data?.message || 'Failed to update schedule';
+  }
+};
+
+const doctorService = {
   getDoctorProfile,
   getDoctorPatients,
-  getDoctorPrescriptions,
-  getDoctorAppointments,
-  createPrescription,
-  getPrescriptionDetails,
-  updatePrescription,
   getPatientDetails,
+  addPatient,
+  getDoctorPrescriptions,
+  getPrescriptionDetails,
+  createPrescription,
+  updatePrescription,
+  deletePrescription,
+  getDoctorAppointments,
+  getAppointmentDetails,
   createAppointment,
   updateAppointment,
-  getAppointmentDetails
+  deleteAppointment,
+  getDoctorSchedule,
+  updateSchedule
 };
+
+export default doctorService;
