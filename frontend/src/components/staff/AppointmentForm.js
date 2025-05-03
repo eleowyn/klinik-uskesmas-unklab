@@ -17,7 +17,8 @@ const AppointmentForm = () => {
     appointmentTime: '',
     reason: '',
     status: 'scheduled',
-    notes: ''
+    notes: '',
+    staffId: localStorage.getItem('userId') // Get current staff ID
   });
 
   useEffect(() => {
@@ -75,6 +76,7 @@ const AppointmentForm = () => {
       const data = {
         patient: formData.patientId,
         doctor: formData.doctorId,
+        staff: formData.staffId,
         date: appointmentDate.toISOString(),
         time: formData.appointmentTime,
         reason: formData.reason,

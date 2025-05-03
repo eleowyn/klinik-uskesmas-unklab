@@ -50,24 +50,33 @@ const TransactionDetail = () => {
         <strong>Patient:</strong> {transaction.patient?.fullName || 'N/A'}
       </div>
       <div className="mb-4">
-        <strong>Amount:</strong> Rp{transaction.totalAmount?.toLocaleString() || '0'}
+        <strong>Status:</strong>{' '}
+        <span className={`px-3 py-1 rounded-full text-sm ${
+          transaction.status === 'completed' ? 'bg-green-100 text-green-700' :
+          transaction.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+          'bg-blue-100 text-blue-700'
+        }`}>
+          {transaction.status || 'pending'}
+        </span>
       </div>
       <div className="mb-4">
-        <strong>Status:</strong> {transaction.paymentStatus || 'Unknown'}
+        <strong>Date:</strong> {new Date(transaction.transactionDate).toLocaleDateString()}
       </div>
       <div className="mb-4">
-        <strong>Date:</strong> {new Date(transaction.createdAt).toLocaleDateString()}
+        <strong>Staff:</strong> {transaction.staff?.fullName || 'N/A'}
       </div>
-      <div className="mb-4">
-        <strong>Items:</strong>
-        <ul className="list-disc list-inside">
-          {transaction.items?.map((item, index) => (
-            <li key={index}>
-              {item.name} - Quantity: {item.quantity}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {transaction.items && transaction.items.length > 0 && (
+        <div className="mb-4">
+          <strong>Items:</strong>
+          <ul className="list-disc list-inside mt-2">
+            {transaction.items.map((item, index) => (
+              <li key={index} className="text-gray-700">
+                {item.name} - Quantity: {item.quantity}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="mb-4">
         <strong>Notes:</strong> {transaction.notes || '-'}
       </div>

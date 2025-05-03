@@ -41,9 +41,15 @@ api.interceptors.response.use(
 export const login = async (email, password) => {
   try {
     const response = await api.post('/auth/login', { email, password });
-    if (response.data.data.token) {
-      localStorage.setItem('token', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+    const { token, user } = response.data.data;
+    if (token) {
+      localStorage.setItem('token', token);
+      // Store user data including the profile
+      const userData = {
+        ...user,
+        profile: user[`${user.role}Profile`]
+      };
+      localStorage.setItem('user', JSON.stringify(userData));
     }
     return response.data.data;
   } catch (error) {
@@ -55,9 +61,15 @@ export const login = async (email, password) => {
 export const register = async (userData) => {
   try {
     const response = await api.post('/auth/register', userData);
-    if (response.data.data.token) {
-      localStorage.setItem('token', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+    const { token, user } = response.data.data;
+    if (token) {
+      localStorage.setItem('token', token);
+      // Store user data including the profile
+      const userData = {
+        ...user,
+        profile: user[`${user.role}Profile`]
+      };
+      localStorage.setItem('user', JSON.stringify(userData));
     }
     return response.data.data;
   } catch (error) {
@@ -90,9 +102,15 @@ export const isAuthenticated = () => {
 export const updateProfile = async (userData) => {
   try {
     const response = await api.put('/auth/profile', userData);
-    const updatedUser = response.data.data;
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    return updatedUser;
+    const { user } = response.data.data;
+    
+    // Store user data including the profile
+    const updatedUserData = {
+      ...user,
+      profile: user[`${user.role}Profile`]
+    };
+    localStorage.setItem('user', JSON.stringify(updatedUserData));
+    return updatedUserData;
   } catch (error) {
     console.error('Update profile error:', error);
     throw error.response?.data?.message || 'Failed to update profile';

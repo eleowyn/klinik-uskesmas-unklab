@@ -11,7 +11,6 @@ const TransactionForm = () => {
   const [patients, setPatients] = useState([]);
   const [formData, setFormData] = useState({
     patientId: '',
-    amount: '',
     type: 'payment',
     description: '',
     paymentMethod: 'cash',
@@ -30,11 +29,10 @@ const TransactionForm = () => {
           const transactionData = await getTransactionDetails(id);
           setFormData({
             patientId: transactionData.patient._id,
-            amount: transactionData.amount,
             type: transactionData.type,
             description: transactionData.description,
             paymentMethod: transactionData.paymentMethod,
-            status: transactionData.status,
+            status: transactionData.status || 'pending',
             notes: transactionData.notes || ''
           });
         }
@@ -63,7 +61,6 @@ const TransactionForm = () => {
     try {
       const data = {
         patient: formData.patientId,
-        amount: parseFloat(formData.amount),
         type: formData.type,
         description: formData.description,
         paymentMethod: formData.paymentMethod,
@@ -124,23 +121,6 @@ const TransactionForm = () => {
           </div>
 
           <div>
-            <label className="block text-gray-700 mb-2" htmlFor="amount">
-              Amount *
-            </label>
-            <input
-              type="number"
-              id="amount"
-              name="amount"
-              value={formData.amount}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              min="0"
-              step="0.01"
-            />
-          </div>
-
-          <div>
             <label className="block text-gray-700 mb-2" htmlFor="type">
               Type *
             </label>
@@ -193,7 +173,6 @@ const TransactionForm = () => {
               <option value="pending">Pending</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
-              <option value="refunded">Refunded</option>
             </select>
           </div>
 

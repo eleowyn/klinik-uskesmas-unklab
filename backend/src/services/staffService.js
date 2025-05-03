@@ -220,7 +220,17 @@ class StaffService {
       })
         .populate('patient', 'fullName')
         .populate('doctor', 'fullName')
-        .sort({ date: 1 });
+        .populate('staff', 'fullName')
+        .sort({ date: 1 })
+        .lean();
+
+      // Format dates for all appointments
+      appointments.forEach(appointment => {
+        if (appointment.date) {
+          appointment.date = new Date(appointment.date).toISOString().split('T')[0];
+        }
+      });
+
       return appointments;
     } catch (error) {
       console.error('Error in getUpcomingAppointments:', error);
@@ -252,10 +262,16 @@ class StaffService {
       const appointment = await Appointment.findById(appointmentId)
         .populate('patient', 'fullName')
         .populate('doctor', 'fullName')
-        .populate('staff', 'fullName');
+        .populate('staff', 'fullName')
+        .lean();
 
       if (!appointment) {
         throw new Error('Appointment not found');
+      }
+
+      // Format the date
+      if (appointment.date) {
+        appointment.date = new Date(appointment.date).toISOString().split('T')[0];
       }
 
       return appointment;
@@ -271,10 +287,19 @@ class StaffService {
         appointmentId,
         { $set: updateData },
         { new: true, runValidators: true }
-      );
+      )
+      .populate('patient', 'fullName')
+      .populate('doctor', 'fullName')
+      .populate('staff', 'fullName')
+      .lean();
 
       if (!appointment) {
         throw new Error('Appointment not found');
+      }
+
+      // Format the date
+      if (appointment.date) {
+        appointment.date = new Date(appointment.date).toISOString().split('T')[0];
       }
 
       return appointment;

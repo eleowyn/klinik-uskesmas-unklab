@@ -14,7 +14,13 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setLoading(true);
-      const { user } = await authService.login(credentials.email, credentials.password);
+      const { user, token } = await authService.login(credentials.email, credentials.password);
+      
+      // Ensure we have both user data and profile
+      if (!user || !user.profile) {
+        throw new Error('Invalid user data received');
+      }
+
       setUser(user);
 
       // Navigate based on role
@@ -34,7 +40,8 @@ export const AuthProvider = ({ children }) => {
 
       showAlert('Login successful', 'success');
     } catch (error) {
-      showAlert(error.message, 'error');
+      console.error('Login error:', error);
+      showAlert(error.message || 'Failed to login', 'error');
       throw error;
     } finally {
       setLoading(false);

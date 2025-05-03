@@ -11,6 +11,11 @@ const TransactionSchema = new mongoose.Schema({
     ref: 'Staff',
     required: true,
   },
+  status: {
+    type: String,
+    enum: ['pending', 'completed', 'cancelled'],
+    default: 'pending'
+  },
   prescription: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Prescription',

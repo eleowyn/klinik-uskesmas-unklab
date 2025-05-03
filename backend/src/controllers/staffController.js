@@ -120,27 +120,16 @@ const getPatient = async (req, res, next) => {
 const createPatient = async (req, res, next) => {
   try {
     console.log('createPatient: Start');
-    console.log('createPatient: Checking existing patient');
-    const existingPatient = await getPatientByUserId(req.user.id);
-    console.log('createPatient: Existing patient:', existingPatient);
-
+    console.log('createPatient: Creating new patient');
+    
     const patientData = {
-      ...req.body,
-      user: req.user.id
+      ...req.body
     };
 
-    let patient;
-    if (existingPatient) {
-      console.log('createPatient: Updating existing patient');
-      patient = await updatePatientDetails(existingPatient._id, patientData);
-      console.log('createPatient: Updated patient:', patient);
-    } else {
-      console.log('createPatient: Creating new patient');
-      patient = await createNewPatient(patientData);
-      console.log('createPatient: Created patient:', patient);
-    }
+    const patient = await createNewPatient(patientData);
+    console.log('createPatient: Created patient:', patient);
 
-    res.status(existingPatient ? 200 : 201).json(responseFormatter({
+    res.status(201).json(responseFormatter({
       status: 'success',
       data: patient,
     }));

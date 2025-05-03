@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertContext } from '../../context/AlertContext';
 import { getUpcomingAppointments, deleteAppointment } from '../../services/staffService';
@@ -10,11 +10,7 @@ const AppointmentManagement = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const { showAlert } = useContext(AlertContext);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getUpcomingAppointments();
@@ -24,7 +20,11 @@ const AppointmentManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showAlert]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this appointment?')) {
@@ -112,7 +112,7 @@ const AppointmentManagement = () => {
                     <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
                       <span>
                         <i className="fas fa-calendar mr-1"></i>
-                        {new Date(appointment.date).toLocaleDateString()}
+                        {appointment.date}
                       </span>
                       <span>
                         <i className="fas fa-clock mr-1"></i>
@@ -122,6 +122,12 @@ const AppointmentManagement = () => {
                         <i className="fas fa-comment mr-1"></i>
                         {appointment.reason}
                       </span>
+                      {appointment.staff && (
+                        <span>
+                          <i className="fas fa-user-nurse mr-1"></i>
+                          {appointment.staff.fullName}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-4">

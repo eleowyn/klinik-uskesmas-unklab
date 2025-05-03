@@ -4,8 +4,7 @@ const PatientSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    unique: true
+    required: false
   },
   doctors: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -115,7 +114,7 @@ PatientSchema.pre('save', async function(next) {
 
 // Add indexes for better query performance
 PatientSchema.index({ doctors: 1 });
-PatientSchema.index({ user: 1 }, { unique: true });
+PatientSchema.index({ user: 1 });  // Remove unique constraint
 PatientSchema.index({ fullName: 'text' });
 
 // Virtual for doctor count
