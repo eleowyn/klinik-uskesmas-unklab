@@ -4,6 +4,9 @@ const staffController = require('../controllers/staffController');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
 
+// Debugging line to verify imports
+console.log('Imported staffController methods:', Object.keys(staffController));
+
 // Patient Management Routes
 router.get('/patients', auth, roleCheck(['staff']), staffController.getPatients);
 router.get('/patients/:id', auth, roleCheck(['staff']), staffController.getPatient);
@@ -26,13 +29,18 @@ router.post('/appointments', auth, roleCheck(['staff']), staffController.createA
 router.put('/appointments/:id', auth, roleCheck(['staff']), staffController.updateAppointment);
 router.delete('/appointments/:id', auth, roleCheck(['staff']), staffController.deleteAppointment);
 
-// Doctor Routes
-router.get('/doctors', auth, roleCheck(['staff']), staffController.getDoctors);
+// Remove the doctors route if you don't have a getDoctors controller method
+// router.get('/doctors', auth, roleCheck(['staff']), staffController.getDoctors);
 
 // Staff Profile Routes
 router.get('/profile', auth, roleCheck(['staff']), staffController.getProfile);
 router.put('/profile', auth, roleCheck(['staff']), staffController.updateProfile);
+
+// Staff Management Routes
 router.get('/', auth, roleCheck(['staff']), staffController.getStaffMembers);
 router.get('/:id', auth, roleCheck(['staff']), staffController.getStaff);
+
+// Get all doctors
+router.get('/doctors', auth, roleCheck(['staff']), staffController.getDoctors);
 
 module.exports = router;

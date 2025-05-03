@@ -69,6 +69,16 @@ const getAll = async () => {
   return await Staff.find({}).populate('user');
 };
 
+const findAllDoctors = async () => {
+  try {
+    // Assuming you have a Staff model with a role field
+    return await Staff.find({ role: 'doctor' }).sort({ fullName: 1 });
+  } catch (error) {
+    console.error('Error in findAllDoctors:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   findStaffByUserId,
   findStaffById,
@@ -76,5 +86,6 @@ module.exports = {
   create,
   update,
   remove,
-  getAll
+  getAll,
+  findAllDoctors
 };

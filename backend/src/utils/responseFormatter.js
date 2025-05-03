@@ -1,18 +1,13 @@
 /**
  * Formats API responses consistently
  * @param {Object} options - Response options
- * @param {string} options.status - Response status ('success' or 'error')
+ * @param {string} [options.status='success'] - Response status ('success' or 'error')
  * @param {string} [options.message] - Optional message
  * @param {any} [options.data] - Response data
  * @param {Array} [options.errors] - Array of error messages
  * @returns {Object} Formatted response object
  */
-const responseFormatter = ({ status, message, data, errors = [] }) => {
-  // Validate status
-  if (!['success', 'error'].includes(status)) {
-    throw new Error('Invalid response status');
-  }
-
+const responseFormatter = ({ status = 'success', message, data, errors = [] }) => {
   // Base response object
   const response = {
     status,
@@ -24,8 +19,8 @@ const responseFormatter = ({ status, message, data, errors = [] }) => {
     response.message = message;
   }
 
-  // Add data for success responses
-  if (status === 'success' && data !== undefined) {
+  // Add data if provided
+  if (data !== undefined) {
     response.data = data;
   }
 

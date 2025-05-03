@@ -304,6 +304,16 @@ const deleteAppointmentById = async (appointmentId) => {
   }
 };
 
+const getAllDoctors = async () => {
+  try {
+    // Assuming you have a `findAllDoctors()` in a repository
+    return await findAllDoctors();
+  } catch (error) {
+    console.error('Error in getAllDoctors:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   getAllDoctors,
   getStaffProfile,

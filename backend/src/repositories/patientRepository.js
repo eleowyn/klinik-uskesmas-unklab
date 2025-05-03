@@ -16,7 +16,9 @@ const createPatient = async (patientData) => {
 const findPatientByUserId = async (userId) => {
   try {
     console.log('Finding patient by user ID:', userId);
-    const patient = await Patient.findOne({ user: userId }).populate('user');
+    const patient = await Patient.findOne({ user: userId })
+      .populate('user')
+      .populate('doctors');
     console.log('Patient found:', patient ? patient._id : 'none');
     return patient;
   } catch (error) {
@@ -28,7 +30,9 @@ const findPatientByUserId = async (userId) => {
 const findPatientById = async (id) => {
   try {
     console.log('Finding patient by ID:', id);
-    const patient = await Patient.findById(id);
+    const patient = await Patient.findById(id)
+      .populate('user')
+      .populate('doctors');
     console.log('Patient found:', patient ? patient._id : 'none');
     return patient;
   } catch (error) {
@@ -40,7 +44,9 @@ const findPatientById = async (id) => {
 const findAllPatients = async () => {
   try {
     console.log('Finding all patients');
-    const patients = await Patient.find();
+    const patients = await Patient.find()
+      .populate('user')
+      .populate('doctors');
     console.log('Found', patients.length, 'patients');
     return patients;
   } catch (error) {
@@ -49,10 +55,26 @@ const findAllPatients = async () => {
   }
 };
 
+const findByDoctor = async (doctorId) => {
+  try {
+    console.log('Finding patients for doctor:', doctorId);
+    const patients = await Patient.find({ doctors: doctorId })
+      .populate('user')
+      .populate('doctors');
+    console.log('Found', patients.length, 'patients for doctor');
+    return patients;
+  } catch (error) {
+    console.error('Error finding patients by doctor:', error);
+    throw error;
+  }
+};
+
 const updatePatient = async (id, updateData) => {
   try {
     console.log('Updating patient:', id, 'with data:', updateData);
-    const patient = await Patient.findByIdAndUpdate(id, updateData, { new: true });
+    const patient = await Patient.findByIdAndUpdate(id, updateData, { new: true })
+      .populate('user')
+      .populate('doctors');
     console.log('Patient updated:', patient ? patient._id : 'none');
     return patient;
   } catch (error) {
@@ -73,11 +95,52 @@ const deletePatient = async (id) => {
   }
 };
 
+// Add doctor to patient's doctors list
+const addDoctorToPatient = async (patientId, doctorId) => {
+  try {
+    console.log('Adding doctor', doctorId, 'to patient:', patientId);
+    const patient = await Patient.findByIdAndUpdate(
+      patientId,
+      { $addToSet: { doctors: doctorId } },
+      { new: true }
+    )
+    .populate('user')
+    .populate('doctors');
+    console.log('Doctor added to patient:', patient ? patient._id : 'none');
+    return patient;
+  } catch (error) {
+    console.error('Error adding doctor to patient:', error);
+    throw error;
+  }
+};
+
+// Remove doctor from patient's doctors list
+const removeDoctorFromPatient = async (patientId, doctorId) => {
+  try {
+    console.log('Removing doctor', doctorId, 'from patient:', patientId);
+    const patient = await Patient.findByIdAndUpdate(
+      patientId,
+      { $pull: { doctors: doctorId } },
+      { new: true }
+    )
+    .populate('user')
+    .populate('doctors');
+    console.log('Doctor removed from patient:', patient ? patient._id : 'none');
+    return patient;
+  } catch (error) {
+    console.error('Error removing doctor from patient:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   createPatient,
   findPatientByUserId,
   findPatientById,
   findAllPatients,
+  findByDoctor,
   updatePatient,
   deletePatient,
+  addDoctorToPatient,
+  removeDoctorFromPatient
 };

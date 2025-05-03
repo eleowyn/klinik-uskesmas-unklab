@@ -15,7 +15,7 @@ const findDoctorById = async (id) => {
 };
 
 const findAllDoctors = async () => {
-  return await Doctor.find().populate('user');
+  return await Doctor.find().select('fullName specialization').populate('user', 'username email');
 };
 
 const updateDoctor = async (id, updateData) => {
@@ -25,6 +25,8 @@ const updateDoctor = async (id, updateData) => {
 const deleteDoctor = async (id) => {
   return await Doctor.findByIdAndDelete(id);
 };
+
+
 
 module.exports = {
   createDoctor,

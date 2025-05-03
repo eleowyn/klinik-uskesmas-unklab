@@ -10,7 +10,7 @@ const Patient = require('../models/Patient');
 
 const register = async (req, res, next) => {
   try {
-    const { username, email, password, role, fullName, dateOfBirth, gender, address, phoneNumber } = req.body;
+    const { username, email, password, role } = req.body;
 
     // Validate required fields
     if (!username || !email || !password || !role) {
@@ -20,28 +20,8 @@ const register = async (req, res, next) => {
       }));
     }
 
-    // Additional validation for patient role required fields
-    if (role === 'patient') {
-      if (!fullName || !dateOfBirth || !gender || !address || !phoneNumber) {
-        return res.status(400).json(responseFormatter({
-          status: 'error',
-          message: 'Please provide all required patient fields: fullName, dateOfBirth, gender, address, phoneNumber'
-        }));
-      }
-    }
-
-    // Pass validated data to registerUser service
-    const { user, profile, token } = await registerUser({
-      username,
-      email,
-      password,
-      role,
-      fullName,
-      dateOfBirth,
-      gender,
-      address,
-      phoneNumber
-    });
+    // Pass data to registerUser service
+    const { user, profile, token } = await registerUser(req.body);
    
     res.status(201).json(responseFormatter({
       status: 'success',

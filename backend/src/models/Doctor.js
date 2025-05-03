@@ -7,26 +7,35 @@ const DoctorSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  NO_SIP: {
+    type: String,
+    required: [true, 'NO_SIP is required for doctor registration'],
+    unique: true,
+  },
   fullName: {
     type: String,
     required: true,
+  },
+  gender: {
+    type: String,
+    required: true,
+    enum: ['male', 'female'],
   },
   specialization: {
     type: String,
     required: true,
   },
-  licenseNumber: {
+  address: {
     type: String,
     required: true,
-    unique: true,
   },
-  phoneNumber: {
+  noTelp: {
     type: String,
     required: true,
   },
   schedule: {
     type: Map,
-    of: [String], // Array of time slots for each day
+    of: [String],
     default: {},
   },
   createdAt: {

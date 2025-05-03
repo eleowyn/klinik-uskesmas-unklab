@@ -9,20 +9,33 @@ const StaffSchema = new mongoose.Schema({
   },
   fullName: {
     type: String,
-    required: false,
-  },
-  position: {
-    type: String,
     required: true,
   },
-  phoneNumber: {
+  gender: {
     type: String,
-    required: false,
+    required: true,
+    enum: ['male', 'female'],
+  },
+  role: {
+    type: String,
+    required: true,
+    default: 'staff'
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    validate: {
+      validator: function(v) {
+        return v.includes('staff');
+      },
+      message: props => `${props.value} must contain 'staff' to be a valid staff email!`
+    }
   },
   createdAt: {
     type: Date,
     default: Date.now,
-  },
+  }
 });
 
 module.exports = mongoose.model('Staff', StaffSchema);

@@ -17,6 +17,25 @@ const registerUser = async (userData) => {
       throw new Error('Please provide all required fields');
     }
 
+    // Validate role-specific required fields
+    if (userData.role === 'doctor') {
+      if (!userData.NO_SIP) {
+        throw new Error('NO_SIP is required for doctor registration');
+      }
+      if (!userData.fullName || !userData.gender || !userData.specialization || !userData.address || !userData.noTelp) {
+        throw new Error('Please provide all required doctor fields: fullName, gender, specialization, address, noTelp');
+      }
+    }
+
+    if (userData.role === 'staff') {
+      if (!userData.fullName || !userData.gender) {
+        throw new Error('Please provide all required staff fields: fullName, gender');
+      }
+      if (!userData.email.includes('staff')) {
+        throw new Error('Staff email must contain "staff"');
+      }
+    }
+
     // Check if username or email already exists
     const [existingUser, existingEmail] = await Promise.all([
       findUserByUsername(userData.username),
@@ -43,30 +62,24 @@ const registerUser = async (userData) => {
     let profile;
     try {
       switch (userData.role) {
-        case 'patient':
-          profile = await createPatient({
-            user: user._id,
-            fullName: userData.fullName || userData.username,
-            dateOfBirth: userData.dateOfBirth,
-            gender: userData.gender,
-            address: userData.address,
-            phoneNumber: userData.phoneNumber
-          });
-          break;
         case 'doctor':
           profile = await createDoctor({
             user: user._id,
-            name: userData.fullName || userData.username,
+            NO_SIP: userData.NO_SIP,
+            fullName: userData.fullName,
+            gender: userData.gender,
             specialization: userData.specialization,
-            qualifications: userData.qualifications
+            address: userData.address,
+            noTelp: userData.noTelp
           });
           break;
         case 'staff':
           profile = await createStaff({
             user: user._id,
-            fullName: userData.fullName || userData.username,
-            position: userData.position || 'staff',
-            department: userData.department
+            fullName: userData.fullName,
+            gender: userData.gender,
+            email: userData.email,
+            role: 'staff'
           });
           break;
         default:
@@ -130,7 +143,7 @@ const loginUser = async (email, password) => {
 
 const generateToken = (userId) => {
   try {
-    return jwt.sign({ id: userId }, config.JWT_SECRET, {
+    return jwt.sign({ userId }, config.JWT_SECRET, {
       expiresIn: config.JWT_EXPIRE,
     });
   } catch (error) {

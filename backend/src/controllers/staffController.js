@@ -20,6 +20,10 @@ const {
   createNewAppointment,
   deleteAppointmentById,
 } = require('../services/staffService');
+
+// Import the getAllDoctors function from the doctorService
+const { getAllDoctors } = require('../services/doctorService');
+
 const { responseFormatter } = require('../utils/responseFormatter');
 
 // Staff Profile Controllers
@@ -72,6 +76,19 @@ const updateProfile = async (req, res, next) => {
     res.status(200).json(responseFormatter({
       status: 'success',
       data: staff,
+    }));
+  } catch (err) {
+    next(err);
+  }
+};
+
+// NEW FUNCTION: Add the doctor controller function
+const getDoctors = async (req, res, next) => {
+  try {
+    const doctors = await getAllDoctors();
+    res.status(200).json(responseFormatter({
+      status: 'success',
+      data: doctors,
     }));
   } catch (err) {
     next(err);
@@ -302,4 +319,5 @@ module.exports = {
   fetchUpcomingAppointments,
   updateAppointment,
   deleteAppointment,
+  getDoctors, // Export the new function
 };

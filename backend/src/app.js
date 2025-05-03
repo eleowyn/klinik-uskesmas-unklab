@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -19,7 +20,7 @@ connectDB();
 app.use(morgan('dev')); // Logging middleware
 app.use(cors({
   origin: 'http://localhost:3000', // React app URL
-  credentials: true,
+  credentials: false, // Changed to match frontend
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));

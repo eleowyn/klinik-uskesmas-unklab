@@ -4,3 +4,5 @@ module.exports = {
   JWT_EXPIRE: process.env.JWT_EXPIRE || '24h',
   NODE_ENV: process.env.NODE_ENV || 'development',
 };
+
+console.log('JWT_SECRET:', module.exports.JWT_SECRET);
