@@ -28,6 +28,7 @@ const AppointmentForm = () => {
           getPatients(),
           getDoctors()
         ]);
+        console.log('Fetched doctors:', doctorsData); // Debugging log
         setPatients(patientsData);
         setDoctors(doctorsData);
 
@@ -44,6 +45,7 @@ const AppointmentForm = () => {
           });
         }
       } catch (err) {
+        console.error('Error fetching data:', err); // Debugging log
         showAlert(err.message, 'error');
       } finally {
         setLoading(false);
@@ -119,7 +121,7 @@ const AppointmentForm = () => {
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
-              <option value="">Select Patient</option>
+              <option value="">Select Patientt</option>
               {patients.map(patient => (
                 <option key={patient._id} value={patient._id}>
                   {patient.fullName}
@@ -143,7 +145,7 @@ const AppointmentForm = () => {
               <option value="">Select Doctor</option>
               {doctors.map(doctor => (
                 <option key={doctor._id} value={doctor._id}>
-                  {doctor.fullName}
+                  {doctor.fullName || doctor.user?.username} - {doctor.specialization || 'General'}
                 </option>
               ))}
             </select>

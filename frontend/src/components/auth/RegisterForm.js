@@ -9,7 +9,13 @@ const RegisterForm = () => {
     email: '',
     password: '',
     password_confirmation: '',
-    role: 'patient', // Default role
+    role: 'doctor', // Default role
+    fullName: '',
+    gender: 'male',
+    NO_SIP: '',
+    specialization: '',
+    address: '',
+    noTelp: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   
@@ -17,17 +23,44 @@ const RegisterForm = () => {
   const { showAlert } = useContext(AlertContext);
   const navigate = useNavigate();
 
-  const { username, email, password, password_confirmation, role } = formData;
+  const { 
+    username, email, password, password_confirmation, role,
+    fullName, gender, NO_SIP, specialization, address, noTelp
+  } = formData;
 
   const onChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const validateForm = () => {
+    if (password !== password_confirmation) {
+      showAlert('Passwords do not match', 'error');
+      return false;
+    }
+
+    if (role === 'doctor') {
+      if (!NO_SIP) {
+        showAlert('NO_SIP is required for doctor registration', 'error');
+        return false;
+      }
+      if (!specialization) {
+        showAlert('Specialization is required for doctor registration', 'error');
+        return false;
+      }
+    }
+
+    if (role === 'staff' && !email.includes('staff')) {
+      showAlert('Staff email must contain "staff"', 'error');
+      return false;
+    }
+
+    return true;
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     
-    if (password !== password_confirmation) {
-      showAlert('Passwords do not match', 'error');
+    if (!validateForm()) {
       return;
     }
 
@@ -63,9 +96,10 @@ const RegisterForm = () => {
             required
           />
         </div>
+
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-            Email
+            Email {role === 'staff' && <span className="text-sm text-gray-500">(must contain "staff")</span>}
           </label>
           <input
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -77,6 +111,120 @@ const RegisterForm = () => {
             required
           />
         </div>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fullName">
+            Full Name
+          </label>
+          <input
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="fullName"
+            type="text"
+            name="fullName"
+            value={fullName}
+            onChange={onChange}
+            required
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="gender">
+            Gender
+          </label>
+          <select
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="gender"
+            name="gender"
+            value={gender}
+            onChange={onChange}
+            required
+          >
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="role">
+            Register as
+          </label>
+          <select
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="role"
+            name="role"
+            value={role}
+            onChange={onChange}
+            required
+          >
+            <option value="doctor">Doctor</option>
+            <option value="staff">Staff</option>
+          </select>
+        </div>
+
+        {role === 'doctor' && (
+          <>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="NO_SIP">
+                NO_SIP *
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="NO_SIP"
+                type="text"
+                name="NO_SIP"
+                value={NO_SIP}
+                onChange={onChange}
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="specialization">
+                Specialization *
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="specialization"
+                type="text"
+                name="specialization"
+                value={specialization}
+                onChange={onChange}
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="address">
+                Address *
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="address"
+                type="text"
+                name="address"
+                value={address}
+                onChange={onChange}
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="noTelp">
+                Phone Number *
+              </label>
+              <input
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                id="noTelp"
+                type="tel"
+                name="noTelp"
+                value={noTelp}
+                onChange={onChange}
+                required
+              />
+            </div>
+          </>
+        )}
+
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
             Password
@@ -91,27 +239,7 @@ const RegisterForm = () => {
             required
           />
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="role">
-            Register as
-          </label>
-          <select
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="role"
-            name="role"
-            value={role}
-            onChange={onChange}
-            required
-          >
-            {/* Removed Patient option as patients should not register */}
-            <option value="doctor">Doctor</option>
-            <option value="staff">Staff</option>
-          </select>
-        </div>
-        {role === 'patient' && (
-          <>
-          </>
-        )}
+
         <div className="mb-6">
           <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password_confirmation">
             Confirm Password
@@ -126,6 +254,7 @@ const RegisterForm = () => {
             required
           />
         </div>
+
         <div className="flex items-center justify-between">
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
@@ -135,6 +264,7 @@ const RegisterForm = () => {
             {isLoading ? 'Processing...' : 'Register'}
           </button>
         </div>
+
         <div className="text-center mt-4">
           <p>
             Already have an account?{' '}

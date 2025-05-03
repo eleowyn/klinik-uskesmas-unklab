@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-
-const Sidebar = ({ title, navLinks, user, onLogout }) => {
+const Sidebar = ({ title, navLinks = [], user, onLogout }) => {
   const location = useLocation();
+
+  let sidebarLinks = [...navLinks];
 
   // Add transactions and appointments links if user is staff
   if (user && user.role === 'staff') {
@@ -12,9 +13,22 @@ const Sidebar = ({ title, navLinks, user, onLogout }) => {
       { path: '/staff/appointments', label: 'Appointments', icon: 'fas fa-calendar-alt' },
     ];
     // Prevent duplicates
-    const existingPaths = navLinks.map(link => link.path);
+    const existingPaths = sidebarLinks.map(link => link.path);
     const filteredExtraLinks = extraLinks.filter(link => !existingPaths.includes(link.path));
-    navLinks = [...navLinks, ...filteredExtraLinks];
+    sidebarLinks = [...sidebarLinks, ...filteredExtraLinks];
+  }
+
+  // Add doctor-specific links
+  if (user && user.role === 'doctor') {
+    const doctorLinks = [
+      { path: '/doctor/appointments', label: 'My Appointments', icon: 'fas fa-calendar-check' },
+      { path: '/doctor/patients', label: 'Patients', icon: 'fas fa-user-injured' },
+      { path: '/doctor/prescriptions', label: 'Prescriptions', icon: 'fas fa-prescription' }
+    ];
+    // Prevent duplicates
+    const existingPaths = sidebarLinks.map(link => link.path);
+    const filteredDoctorLinks = doctorLinks.filter(link => !existingPaths.includes(link.path));
+    sidebarLinks = [...sidebarLinks, ...filteredDoctorLinks];
   }
 
   return (
@@ -25,13 +39,13 @@ const Sidebar = ({ title, navLinks, user, onLogout }) => {
         {user && (
           <div className="mb-6 pb-6 border-b border-blue-800">
             <p className="text-sm text-blue-300">Welcome,</p>
-            <p className="font-semibold">{user.name}</p>
+            <p className="font-semibold">{user.fullName || user.username}</p>
           </div>
         )}
 
         <nav>
           <ul className="space-y-2">
-            {navLinks.map((link) => {
+            {sidebarLinks.map((link) => {
               const isActive = location.pathname.includes(link.path);
               return (
                 <li key={link.path}>

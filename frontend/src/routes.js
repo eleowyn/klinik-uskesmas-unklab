@@ -7,6 +7,10 @@ import Register from './pages/Register';
 import DoctorPortal from './pages/DoctorPortal';
 import StaffPortal from './pages/StaffPortal';
 import PatientPortal from './pages/PatientPortal';
+import DoctorDashboard from './components/doctor/DoctorDashboard';
+import PatientList from './components/doctor/PatientList';
+import PatientDetails from './components/doctor/PatientDetails';
+import PrescriptionForm from './components/doctor/PrescriptionForm';
 import StaffDashboard from './components/staff/StaffDashboard';
 import PatientManagement from './components/staff/PatientManagement';
 import PatientForm from './components/staff/PatientForm';
@@ -35,12 +39,66 @@ const routes = [
     element: <Register />
   },
   {
-    path: '/doctor/*',
+    path: '/doctor',
     element: (
       <ProtectedRoute allowedRoles={['doctor']}>
         <DoctorPortal />
       </ProtectedRoute>
-    )
+    ),
+    children: [
+      {
+        path: '',
+        element: <Navigate to="dashboard" replace />
+      },
+      {
+        path: 'dashboard',
+        element: (
+          <ProtectedRoute allowedRoles={['doctor']}>
+            <DoctorDashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'patients',
+        element: (
+          <ProtectedRoute allowedRoles={['doctor']}>
+            <PatientList />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'patients/:id',
+        element: (
+          <ProtectedRoute allowedRoles={['doctor']}>
+            <PatientDetails />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'prescriptions/new',
+        element: (
+          <ProtectedRoute allowedRoles={['doctor']}>
+            <PrescriptionForm />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'appointments',
+        element: (
+          <ProtectedRoute allowedRoles={['doctor']}>
+            <AppointmentManagement />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'appointments/new',
+        element: (
+          <ProtectedRoute allowedRoles={['doctor']}>
+            <AppointmentForm />
+          </ProtectedRoute>
+        )
+      }
+    ]
   },
   {
     path: '/staff',

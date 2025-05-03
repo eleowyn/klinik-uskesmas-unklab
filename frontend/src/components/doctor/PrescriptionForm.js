@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import AlertContext from '../../context/AlertContext';
-import api from '../../services/doctorService';
+import { AlertContext } from '../../context/AlertContext';
+import { getDoctorPatients, createPrescription } from '../../services/doctorService';
 
 const PrescriptionForm = () => {
   const { user } = useContext(AuthContext);
@@ -22,30 +22,26 @@ const PrescriptionForm = () => {
   
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
 
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const res = await api.get('/api/doctors/prescriptions');
+        const response = await getDoctorPatients();
+        setPatients(response.data || []);
         
-        // Get unique patients from prescriptions
-        const patientMap = new Map();
-        res.data.data.forEach(prescription => {
-          if (!patientMap.has(prescription.patient._id)) {
-            patientMap.set(prescription.patient._id, prescription.patient);
-          }
-        });
-        
-        setPatients(Array.from(patientMap.values()));
+        if (patientId) {
+          const patient = response.data.find(p => p._id === patientId);
+          setSelectedPatient(patient);
+        }
       } catch (err) {
         console.error('Error fetching patients:', err);
+        showAlert('Failed to load patients', 'error');
       }
     };
     
-    if (!patientId) {
-      fetchPatients();
-    }
-  }, [patientId]);
+    fetchPatients();
+  }, [patientId, showAlert]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,6 +49,11 @@ const PrescriptionForm = () => {
       ...formData,
       [name]: value,
     });
+
+    if (name === 'patient') {
+      const patient = patients.find(p => p._id === value);
+      setSelectedPatient(patient);
+    }
   };
 
   const handleMedicationChange = (index, e) => {
@@ -100,9 +101,9 @@ const PrescriptionForm = () => {
         ),
       };
       
-      await api.post('/api/doctors/prescriptions', prescriptionData);
+      await createPrescription(prescriptionData);
       showAlert('Prescription created successfully', 'success');
-      navigate('/doctor/prescriptions');
+      navigate('/doctor/patients/' + formData.patient);
     } catch (err) {
       showAlert(err.response?.data?.message || 'Failed to create prescription', 'error');
     } finally {
@@ -131,10 +132,23 @@ const PrescriptionForm = () => {
               <option value="">Select a patient</option>
               {patients.map(patient => (
                 <option key={patient._id} value={patient._id}>
-                  {patient.fullName} ({patient.phoneNumber})
+                  {patient.fullName} ({patient.phoneNumber || 'No phone'})
                 </option>
               ))}
             </select>
+          </div>
+        )}
+
+        {selectedPatient && (
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+            <h3 className="font-semibold text-blue-800 mb-2">Patient Information</h3>
+            <p><span className="font-medium">Name:</span> {selectedPatient.fullName}</p>
+            <p><span className="font-medium">Gender:</span> {selectedPatient.gender}</p>
+            <p><span className="font-medium">Age:</span> {selectedPatient.dateOfBirth ? 
+              new Date().getFullYear() - new Date(selectedPatient.dateOfBirth).getFullYear() : 'N/A'} years</p>
+            {selectedPatient.allergies && (
+              <p className="text-red-600"><span className="font-medium">Allergies:</span> {selectedPatient.allergies.join(', ')}</p>
+            )}
           </div>
         )}
         
@@ -216,6 +230,7 @@ const PrescriptionForm = () => {
                     onChange={(e) => handleMedicationChange(index, e)}
                     className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
+                    placeholder="e.g., 3 times a day"
                   />
                 </div>
                 <div>
@@ -227,6 +242,7 @@ const PrescriptionForm = () => {
                     onChange={(e) => handleMedicationChange(index, e)}
                     className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
+                    placeholder="e.g., 7 days"
                   />
                 </div>
               </div>
@@ -239,6 +255,7 @@ const PrescriptionForm = () => {
                   onChange={(e) => handleMedicationChange(index, e)}
                   rows="2"
                   className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Take after meals"
                 ></textarea>
               </div>
               
@@ -258,7 +275,7 @@ const PrescriptionForm = () => {
         <div className="flex justify-end space-x-4">
           <button
             type="button"
-            onClick={() => navigate('/doctor/prescriptions')}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 transition"
           >
             Cancel

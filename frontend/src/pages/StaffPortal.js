@@ -22,10 +22,10 @@ const StaffPortal = () => {
   }
 
   const navLinks = [
-    { path: 'dashboard', icon: 'fas fa-tachometer-alt', label: 'Dashboard' },
-    { path: 'patients', icon: 'fas fa-procedures', label: 'Patients' },
-    { path: 'transactions', icon: 'fas fa-receipt', label: 'Transactions' },
-    { path: 'appointments', icon: 'fas fa-calendar-alt', label: 'Appointments' },
+    { path: '/staff/dashboard', icon: 'fas fa-tachometer-alt', label: 'Dashboard' },
+    { path: '/staff/patients', icon: 'fas fa-procedures', label: 'Patients' },
+    { path: '/staff/transactions', icon: 'fas fa-receipt', label: 'Transactions' },
+    { path: '/staff/appointments', icon: 'fas fa-calendar-alt', label: 'Appointments' },
   ];
 
   return (
@@ -36,9 +36,7 @@ const StaffPortal = () => {
           navLinks={navLinks} 
           user={{
             ...user,
-            name: user.staffProfile?.fullName || user.username,
-            role: 'Staff Member',
-            position: user.staffProfile?.position || 'Staff'
+            fullName: user.staffProfile?.fullName || user.username
           }}
           onLogout={handleLogout} 
         />

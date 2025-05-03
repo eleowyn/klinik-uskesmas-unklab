@@ -1,68 +1,43 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
-import api from '../../services/doctorService';
+import { useDoctorContext } from '../../context/DoctorContext';
 
 const PatientList = () => {
-  const { user } = useContext(AuthContext);
-  const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { dashboardData } = useDoctorContext();
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const res = await api.get('/api/doctors/prescriptions');
-        
-        // Get unique patients from prescriptions
-        const patientMap = new Map();
-        res.data.data.forEach(prescription => {
-          if (!patientMap.has(prescription.patient._id)) {
-            patientMap.set(prescription.patient._id, prescription.patient);
-          }
-        });
-        
-        setPatients(Array.from(patientMap.values()));
-      } catch (err) {
-        console.error('Error fetching patients:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchPatients();
-  }, []);
-
-  const filteredPatients = patients.filter(patient =>
-    patient.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.phoneNumber.includes(searchTerm)
-  );
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  const filteredPatients = dashboardData.patients?.filter(patient =>
+    patient.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.phoneNumber?.includes(searchTerm)
+  ) || [];
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Patients</h1>
-        <Link 
-          to="#" 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
-        >
-          Add New Patient
-        </Link>
+        <h1 className="text-2xl font-bold text-gray-800">My Patients</h1>
+        <div className="flex space-x-4">
+          <Link 
+            to="/doctor/appointments/new" 
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition"
+          >
+            <i className="fas fa-calendar-plus mr-2"></i>
+            Schedule Appointment
+          </Link>
+          <Link 
+            to="/doctor/prescriptions/new" 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
+          >
+            <i className="fas fa-prescription mr-2"></i>
+            New Prescription
+          </Link>
+        </div>
       </div>
       
       <div className="mb-6">
         <div className="relative">
           <input
             type="text"
-            placeholder="Search patients..."
+            placeholder="Search patients by name or phone..."
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -78,6 +53,7 @@ const PatientList = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Visit</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -102,28 +78,40 @@ const PatientList = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {patient.phoneNumber}
+                    {patient.phoneNumber || 'N/A'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {patient.lastVisit ? new Date(patient.lastVisit).toLocaleDateString() : 'Never'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
                     <Link 
                       to={`/doctor/patients/${patient._id}`} 
-                      className="text-blue-600 hover:text-blue-900 mr-4"
+                      className="text-blue-600 hover:text-blue-900"
+                      title="View Patient Details"
                     >
-                      View
+                      <i className="fas fa-eye"></i>
                     </Link>
                     <Link 
                       to={`/doctor/prescriptions/new?patientId=${patient._id}`} 
                       className="text-green-600 hover:text-green-900"
+                      title="Create Prescription"
                     >
-                      Prescribe
+                      <i className="fas fa-prescription"></i>
+                    </Link>
+                    <Link 
+                      to={`/doctor/appointments/new?patientId=${patient._id}`} 
+                      className="text-purple-600 hover:text-purple-900"
+                      title="Schedule Appointment"
+                    >
+                      <i className="fas fa-calendar-plus"></i>
                     </Link>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
-                  No patients found
+                <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
+                  {searchTerm ? 'No patients found matching your search' : 'No patients found'}
                 </td>
               </tr>
             )}
