@@ -7,6 +7,11 @@ const doctorSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  username: {
+    type: String,
+    required: false,
+    unique: false
+  },
   fullName: {
     type: String,
     required: true
@@ -15,25 +20,27 @@ const doctorSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  licenseNumber: {
+  no_sip: {
     type: String,
     required: true,
     unique: true
   },
   phone: {
     type: String,
-    required: true
+    required: false
   },
   email: {
     type: String,
-    required: true,
+    required: false,
     unique: true
   },
+  gender: {
+    type: String,
+    required: true
+  },
   address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String
+    type: String,
+    required: false
   },
   workingHours: {
     monday: {
@@ -109,10 +116,9 @@ const doctorSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes
 doctorSchema.index({ user: 1 });
 doctorSchema.index({ email: 1 });
-doctorSchema.index({ licenseNumber: 1 });
+doctorSchema.index({ no_sip: 1 });
 doctorSchema.index({ specialization: 1 });
 doctorSchema.index({ status: 1 });
 
@@ -152,6 +158,36 @@ doctorSchema.methods.getUpcomingAppointments = function() {
 doctorSchema.pre('save', async function(next) {
   if (this.isModified('email')) {
     this.email = this.email.toLowerCase();
+  }
+  next();
+});
+
+// Middleware to maintain bidirectional relationship with patients
+doctorSchema.pre('save', async function(next) {
+  if (this.isModified('patients')) {
+    const Patient = mongoose.model('Patient');
+    
+    // Get the previous version of patients array if this is an existing document
+    const oldPatients = this._id ? 
+      (await Doctor.findById(this._id).select('patients')).patients : [];
+    
+    // Find patients to add and remove
+    const patientsToAdd = this.patients.filter(p => !oldPatients.includes(p));
+    const patientsToRemove = oldPatients.filter(p => !this.patients.includes(p));
+
+    // Update the patients' doctors arrays
+    await Promise.all([
+      ...patientsToAdd.map(patientId => 
+        Patient.findByIdAndUpdate(patientId, 
+          { $addToSet: { doctors: this._id } }
+        )
+      ),
+      ...patientsToRemove.map(patientId => 
+        Patient.findByIdAndUpdate(patientId, 
+          { $pull: { doctors: this._id } }
+        )
+      )
+    ]);
   }
   next();
 });

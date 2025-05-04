@@ -28,11 +28,11 @@ const registerUser = async (userData) => {
     }
 
     if (userData.role === 'staff') {
-      if (!userData.fullName || !userData.gender) {
-        throw new Error('Please provide all required staff fields: fullName, gender');
+      if (!userData.fullName || !userData.gender || !userData.position) {
+        throw new Error('Please provide all required staff fields: fullName, gender, position');
       }
-      if (!userData.email.includes('staff')) {
-        throw new Error('Staff email must contain "staff"');
+      if (!userData.email || !userData.email.includes('@staff')) {
+        throw new Error('Staff email must contain "@staff"');
       }
     }
 
@@ -78,8 +78,7 @@ const registerUser = async (userData) => {
             user: user._id,
             fullName: userData.fullName,
             gender: userData.gender,
-            email: userData.email,
-            role: 'staff'
+            position: userData.position
           });
           break;
         default:

@@ -1,11 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
 import { AlertContext } from '../../context/AlertContext';
 import { getDoctorPatients, createPrescription } from '../../services/doctorService';
 
 const PrescriptionForm = () => {
-  const { user } = useContext(AuthContext);
   const { showAlert } = useContext(AlertContext);
   const navigate = useNavigate();
   const location = useLocation();

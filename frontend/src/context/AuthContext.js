@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setLoading(true);
-      const { user, token } = await authService.login(credentials.email, credentials.password);
+      const { user } = await authService.login(credentials.email, credentials.password);
       
       // Ensure we have both user data and profile
       if (!user || !user.profile) {

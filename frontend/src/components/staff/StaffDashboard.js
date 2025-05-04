@@ -104,7 +104,7 @@ const StaffDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <DashboardCard
           title="Total Patients"
           value={patients.length}
@@ -124,16 +124,6 @@ const StaffDashboard = () => {
           value={transactions.filter(t => t.status === 'pending').length}
           icon="fas fa-file-invoice-dollar"
           color="bg-yellow-500"
-          link="/staff/transactions"
-        />
-        <DashboardCard
-          title="Total Revenue Today"
-          value={`$${transactions
-            .filter(t => new Date(t.date).toDateString() === new Date().toDateString())
-            .reduce((sum, t) => sum + (t.amount || 0), 0)
-            .toFixed(2)}`}
-          icon="fas fa-chart-line"
-          color="bg-purple-500"
           link="/staff/transactions"
         />
       </div>

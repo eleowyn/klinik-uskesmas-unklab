@@ -161,9 +161,21 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error('Register error:', error);
+    // Log detailed validation errors if any
+    if (error.name === 'ValidationError') {
+      for (const field in error.errors) {
+        console.error(`Validation error for ${field}:`, error.errors[field].message);
+      }
+      return res.status(400).json({
+        status: 'error',
+        message: 'Validation failed',
+        errors: error.errors
+      });
+    }
     res.status(500).json({
       status: 'error',
-      message: 'Registration failed'
+      message: 'Registration failed',
+      error: error.message
     });
   }
 });

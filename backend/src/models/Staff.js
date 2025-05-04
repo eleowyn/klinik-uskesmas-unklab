@@ -13,33 +13,22 @@ const staffSchema = new mongoose.Schema({
   },
   position: {
     type: String,
-    required: true,
     enum: ['receptionist', 'nurse', 'admin', 'other']
   },
-  employeeId: {
-    type: String,
-    required: true,
-    unique: true
-  },
   phone: {
-    type: String,
-    required: true
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true
+    type: String
   },
   password: {
     type: String,
     required: false
   },
-  address: {
-    street: String,
-    city: String,
-    state: String,
-    zipCode: String
+  username: String,
+  gender: {
+    type: String,
+    required: true,
+    enum: ['male', 'female', 'other']
   },
+  address: String,
   workingHours: {
     monday: {
       start: String,
@@ -117,8 +106,6 @@ const staffSchema = new mongoose.Schema({
 
 // Indexes
 staffSchema.index({ user: 1 });
-staffSchema.index({ email: 1 });
-staffSchema.index({ employeeId: 1 });
 staffSchema.index({ status: 1 });
 
 // Virtual for full name
@@ -145,14 +132,6 @@ staffSchema.methods.isWorking = function(date) {
 
   return time >= start && time <= end;
 };
-
-// Pre-save middleware
-staffSchema.pre('save', async function(next) {
-  if (this.isModified('email')) {
-    this.email = this.email.toLowerCase();
-  }
-  next();
-});
 
 const Staff = mongoose.model('Staff', staffSchema);
 

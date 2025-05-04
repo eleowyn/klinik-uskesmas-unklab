@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertContext } from '../../context/AlertContext';
 import { getTransactions, deleteTransaction } from '../../services/staffService';
@@ -12,21 +12,32 @@ const TransactionManagement = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
+      setLoading(true);
       const response = await getTransactions();
-      // Handle the response data structure from the backend
-      setTransactions(response || []);
+      if (!response) {
+        throw new Error('No data received from server');
+      }
+      // Ensure all transaction dates are valid
+      const formattedTransactions = response.map(transaction => ({
+        ...transaction,
+        createdAt: transaction.createdAt ? new Date(transaction.createdAt).toISOString() : null,
+        date: transaction.date ? new Date(transaction.date).toISOString() : null
+      }));
+      setTransactions(formattedTransactions);
     } catch (err) {
+      console.error('Error fetching transactions:', err);
       showAlert(err.message || 'Failed to fetch transactions', 'error');
+      setTransactions([]); // Reset to empty array on error
     } finally {
       setLoading(false);
     }
-  };
+  }, [showAlert]);
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [fetchTransactions]);
 
   const handleDeleteClick = (transaction) => {
     setSelectedTransaction(transaction);
@@ -156,7 +167,15 @@ const TransactionManagement = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(transaction.createdAt).toLocaleDateString()}
+                      {transaction.createdAt 
+                        ? new Date(transaction.createdAt).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : 'Date not available'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-3">

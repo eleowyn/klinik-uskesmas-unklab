@@ -53,46 +53,34 @@ exports.getProfile = async (req, res) => {
 // Patients
 exports.getPatients = async (req, res) => {
   try {
-    // Use the doctorProfile that was attached by roleCheck middleware
-    const doctorProfile = req.doctorProfile;
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
     
     if (!doctorProfile) {
-      console.error('Doctor profile not found in middleware');
+      console.error('Doctor profile not found');
       return res.status(404).json(responseFormatter({
         status: 'error',
         message: 'Doctor profile not found'
       }));
     }
-    
-    console.log('getPatients - Using doctorProfile from middleware:', {
-      doctorId: doctorProfile._id,
-      userId: req.user.id,
-      name: doctorProfile.fullName
-    });
 
-    // Use lean() for better performance and convert to plain JavaScript objects
-    console.log('Finding patients for doctor:', doctorProfile._id);
-    
+    // Get all patients assigned to this doctor
     const patients = await Patient.find({ 
       doctors: doctorProfile._id 
     })
-    .lean()
-    .populate('user', '-password')
-    .sort({ fullName: 1 });
+    .select('fullName email phoneNumber gender dateOfBirth address')
+    .sort({ fullName: 1 })
+    .lean();
 
-    console.log('Patient query results:', {
+    console.log('Found patients:', {
       doctorId: doctorProfile._id,
-      patientsFound: patients.length,
-      patientIds: patients.map(p => p._id),
-      patients: patients.map(p => ({
-        id: p._id,
-        name: p.fullName,
-        doctors: p.doctors
-      }))
+      patientsCount: patients.length,
+      patients: patients.map(p => ({ id: p._id, name: p.fullName }))
     });
 
-    // Return the raw patients array without wrapping in data property
-    res.json(patients);
+    res.json(responseFormatter({
+      status: 'success',
+      data: patients
+    }));
   } catch (error) {
     console.error('Error in getPatients:', error);
     res.status(500).json(responseFormatter({

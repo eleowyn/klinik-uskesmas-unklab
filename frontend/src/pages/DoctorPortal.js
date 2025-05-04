@@ -29,8 +29,8 @@ const DashboardContent = () => {
     if (isAuthenticated && user?.role === 'doctor') {
       refreshDashboardData();
 
-      // Auto-refresh data every 30 seconds
-      const refreshInterval = setInterval(refreshDashboardData, 30000);
+      // Auto-refresh data every 5 seconds for more real-time updates
+      const refreshInterval = setInterval(refreshDashboardData, 5000);
       return () => clearInterval(refreshInterval);
     }
   }, [isAuthenticated, user, refreshDashboardData]);
@@ -81,10 +81,16 @@ const DoctorPortal = () => {
       description: 'View and create prescriptions'
     },
     { 
+      path: '/doctor/appointments', 
+      label: 'Appointments', 
+      icon: 'fas fa-calendar-check',
+      description: 'View and manage appointments'
+    },
+    { 
       path: '/doctor/schedule', 
       label: 'Schedule', 
       icon: 'fas fa-calendar',
-      description: 'Manage your appointments'
+      description: 'View calendar schedule'
     }
   ];
 

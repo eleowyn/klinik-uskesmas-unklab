@@ -54,7 +54,7 @@ const PrescriptionItem = ({ prescription }) => (
 );
 
 const DoctorDashboard = ({ dashboardData }) => {
-  const { patients, appointments, prescriptions, doctorProfile } = dashboardData;
+  const { patients = [], appointments = [], prescriptions = [], doctorProfile } = dashboardData || {};
 
   console.log('DoctorDashboard received data:', {
     doctorId: doctorProfile?._id,

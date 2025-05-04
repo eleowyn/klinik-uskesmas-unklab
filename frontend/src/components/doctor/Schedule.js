@@ -7,7 +7,9 @@ const Schedule = () => {
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState('day'); // 'day' or 'week'
+  const [viewMode, setViewMode] = useState('week'); // 'day' or 'week'
+  const [draggedAppointment, setDraggedAppointment] = useState(null);
+  const [hoveredTimeSlot, setHoveredTimeSlot] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -28,9 +30,33 @@ const Schedule = () => {
     try {
       await updateAppointment(appointmentId, { status: newStatus });
       showAlert('Appointment status updated successfully', 'success');
+      await refreshDashboardData();
     } catch (error) {
       showAlert('Failed to update appointment status: ' + error.message, 'error');
     }
+  };
+
+  const getWeekDates = () => {
+    const dates = [];
+    const startOfWeek = new Date(selectedDate);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Start from Sunday
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(date.getDate() + i);
+      dates.push(date);
+    }
+    return dates;
+  };
+
+  const getTimeSlots = () => {
+    const slots = [];
+    for (let hour = 9; hour <= 17; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) { // 30-minute intervals
+        slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+      }
+    }
+    return slots;
   };
 
   const filterAppointmentsByDate = (appointments, date) => {
@@ -40,13 +66,37 @@ const Schedule = () => {
     });
   };
 
-  const getTimeSlots = () => {
-    const slots = [];
-    for (let hour = 9; hour <= 17; hour++) {
-      slots.push(`${hour}:00`);
-      slots.push(`${hour}:30`);
+  const handleDragStart = (appointment) => {
+    setDraggedAppointment(appointment);
+  };
+
+  const handleDragOver = (e, timeSlot, date) => {
+    e.preventDefault();
+    setHoveredTimeSlot({ time: timeSlot, date });
+  };
+
+  const handleDrop = async (e, timeSlot, date) => {
+    e.preventDefault();
+    if (!draggedAppointment) return;
+
+    try {
+      const [hours, minutes] = timeSlot.split(':');
+      const newDate = new Date(date);
+      newDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+      await updateAppointment(draggedAppointment._id, {
+        ...draggedAppointment,
+        date: newDate.toISOString()
+      });
+
+      showAlert('Appointment rescheduled successfully', 'success');
+      await refreshDashboardData();
+    } catch (error) {
+      showAlert('Failed to reschedule appointment: ' + error.message, 'error');
+    } finally {
+      setDraggedAppointment(null);
+      setHoveredTimeSlot(null);
     }
-    return slots;
   };
 
   if (loading) {
@@ -58,7 +108,7 @@ const Schedule = () => {
   }
 
   const timeSlots = getTimeSlots();
-  const todayAppointments = filterAppointmentsByDate(dashboardData.appointments, selectedDate);
+  const weekDates = viewMode === 'week' ? getWeekDates() : [selectedDate];
 
   return (
     <div className="space-y-6">
@@ -89,7 +139,7 @@ const Schedule = () => {
         </div>
       </div>
 
-      {/* Schedule Grid */}
+      {/* Calendar Grid */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="grid grid-cols-[100px_1fr] divide-x">
           {/* Time Column */}
@@ -102,55 +152,84 @@ const Schedule = () => {
             ))}
           </div>
 
-          {/* Appointments Column */}
-          <div className="divide-y">
-            <div className="h-16 bg-gray-50 p-4">
-              <h3 className="font-medium text-gray-800">
-                {selectedDate.toLocaleDateString(undefined, { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </h3>
-            </div>
-            {timeSlots.map((time) => {
-              const slotAppointments = todayAppointments.filter(apt => {
-                const aptTime = new Date(apt.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                return aptTime === time;
-              });
-
-              return (
-                <div key={time} className="h-20 p-2 relative">
-                  {slotAppointments.map((apt) => (
-                    <div
-                      key={apt._id}
-                      className={`absolute inset-x-2 rounded-lg p-2 ${
-                        apt.status === 'completed' ? 'bg-green-100' :
-                        apt.status === 'cancelled' ? 'bg-red-100' :
-                        'bg-blue-100'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-800">{apt.patientName}</p>
-                          <p className="text-sm text-gray-600">{apt.type}</p>
-                        </div>
-                        <select
-                          value={apt.status}
-                          onChange={(e) => handleStatusChange(apt._id, e.target.value)}
-                          className="text-sm border rounded px-2 py-1"
-                        >
-                          <option value="scheduled">Scheduled</option>
-                          <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </div>
-                    </div>
-                  ))}
+          {/* Days Columns */}
+          <div className="grid grid-cols-1 md:grid-cols-7 divide-x">
+            {/* Day Headers */}
+            <div className="col-span-full grid grid-cols-1 md:grid-cols-7 divide-x">
+              {weekDates.map((date) => (
+                <div key={date.toISOString()} className="h-16 bg-gray-50 p-4">
+                  <h3 className="font-medium text-gray-800">
+                    {date.toLocaleDateString(undefined, { 
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </h3>
                 </div>
-              );
-            })}
+              ))}
+            </div>
+
+            {/* Time Slots Grid */}
+            {timeSlots.map((time) => (
+              <div key={time} className="grid grid-cols-1 md:grid-cols-7 divide-x">
+                {weekDates.map((date) => {
+                  const dayAppointments = filterAppointmentsByDate(dashboardData.appointments, date);
+                  const slotAppointments = dayAppointments.filter(apt => {
+                    const aptTime = new Date(apt.date).toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit',
+                      hour12: false 
+                    });
+                    return aptTime === time;
+                  });
+
+                  return (
+                    <div 
+                      key={`${date.toISOString()}-${time}`}
+                      className={`h-20 p-2 relative ${
+                        hoveredTimeSlot?.time === time && 
+                        hoveredTimeSlot?.date.toDateString() === date.toDateString() 
+                          ? 'bg-blue-50' 
+                          : ''
+                      }`}
+                      onDragOver={(e) => handleDragOver(e, time, date)}
+                      onDrop={(e) => handleDrop(e, time, date)}
+                    >
+                      {slotAppointments.map((apt) => (
+                        <div
+                          key={apt._id}
+                          draggable
+                          onDragStart={() => handleDragStart(apt)}
+                          className={`absolute inset-x-2 rounded-lg p-2 cursor-move transition-all duration-200 hover:shadow-lg ${
+                            apt.status === 'completed' ? 'bg-green-100' :
+                            apt.status === 'cancelled' ? 'bg-red-100' :
+                            draggedAppointment?._id === apt._id ? 'bg-blue-200 opacity-50' :
+                            'bg-blue-100'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-gray-800 text-sm truncate">{apt.patient?.fullName}</p>
+                              <p className="text-xs text-gray-600 truncate">{apt.reason}</p>
+                            </div>
+                            <select
+                              value={apt.status}
+                              onChange={(e) => handleStatusChange(apt._id, e.target.value)}
+                              className="text-xs border rounded px-1 py-0.5"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <option value="scheduled">Scheduled</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                            </select>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertContext } from '../../context/AlertContext';
 import { getAllPatients, deletePatient } from '../../services/staffService';
@@ -10,11 +10,7 @@ const PatientManagement = () => {
   const [filterGender, setFilterGender] = useState('all');
   const { showAlert } = useContext(AlertContext);
 
-  useEffect(() => {
-    fetchPatients();
-  }, []);
-
-  const fetchPatients = async () => {
+  const fetchPatients = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAllPatients();
@@ -24,7 +20,11 @@ const PatientManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showAlert]);
+
+  useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this patient?')) {

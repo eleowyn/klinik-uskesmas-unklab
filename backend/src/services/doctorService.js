@@ -7,17 +7,43 @@ class DoctorService {
   // Profile Management
   async getDoctorByUserId(userId) {
     try {
+      console.log('Getting doctor profile for user:', userId);
+      
+      // First find the doctor
       const doctor = await Doctor.findOne({ user: userId })
-        .populate('user', '-password')
-        .populate('patients', 'fullName email phone')
-        .populate('appointments')
-        .populate('prescriptions');
+        .populate('user', '-password');
       
       if (!doctor) {
         throw new Error('Doctor not found');
       }
+
+      // Get patients, appointments and prescriptions
+      const [patients, appointments, prescriptions] = await Promise.all([
+        Patient.find({ doctors: doctor._id })
+          .select('fullName email phoneNumber gender dateOfBirth address')
+          .lean(),
+        Appointment.find({ doctor: doctor._id })
+          .populate('patient', 'fullName')
+          .lean(),
+        Prescription.find({ doctor: doctor._id })
+          .populate('patient', 'fullName')
+          .lean()
+      ]);
+
+      // Add the related data to doctor object
+      const doctorData = doctor.toObject();
+      doctorData.patients = patients;
+      doctorData.appointments = appointments;
+      doctorData.prescriptions = prescriptions;
+
+      console.log('Doctor data:', {
+        doctorId: doctor._id,
+        patientsCount: patients.length,
+        appointmentsCount: appointments.length,
+        prescriptionsCount: prescriptions.length
+      });
       
-      return doctor;
+      return doctorData;
     } catch (error) {
       console.error('Error in getDoctorByUserId:', error);
       throw error;
@@ -62,14 +88,25 @@ class DoctorService {
   // Patient Management
   async getDoctorPatients(doctorId) {
     try {
+      console.log('Getting patients for doctor:', doctorId);
+      
+      // Find the doctor first
       const doctor = await Doctor.findById(doctorId);
       if (!doctor) {
         throw new Error('Doctor not found');
       }
 
+      // Get all patients assigned to this doctor
       const patients = await Patient.find({ doctors: doctorId })
-        .populate('user', '-password')
-        .sort({ fullName: 1 });
+        .select('fullName email phoneNumber gender dateOfBirth address')
+        .sort({ fullName: 1 })
+        .lean();
+
+      console.log('Found patients for doctor:', {
+        doctorId,
+        patientsCount: patients.length,
+        sampleFields: patients[0] ? Object.keys(patients[0]) : []
+      });
 
       return patients;
     } catch (error) {

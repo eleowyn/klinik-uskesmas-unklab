@@ -24,14 +24,10 @@ const PatientSchema = new mongoose.Schema({
     required: true,
   },
   address: {
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    zipCode: { type: String, required: true }
+    type: String
   },
   phoneNumber: {
-    type: String,
-    required: true,
+    type: String
   },
   email: {
     type: String,

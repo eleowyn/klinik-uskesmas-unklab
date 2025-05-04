@@ -35,8 +35,8 @@ const LoginForm = () => {
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Background with multiple gradients */}
-      <div className="fixed inset-0 bg-gradient-to-br from-cyan-400 via-blue-500 to-blue-600">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0))]"></div>
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-600 via-blue-500 to-teal-400">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(0,150,255,0.3),rgba(255,255,255,0))]"></div>
       </div>
 
       <div className="w-full max-w-md mx-4 relative z-10">

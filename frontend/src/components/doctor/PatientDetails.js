@@ -1,12 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
 import { AlertContext } from '../../context/AlertContext';
 import { getPatientDetails } from '../../services/doctorService';
 
 const PatientDetails = () => {
   const { id } = useParams();
-  const { user } = useContext(AuthContext);
   const { showAlert } = useContext(AlertContext);
   const [patient, setPatient] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
@@ -131,9 +129,7 @@ const PatientDetails = () => {
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
                 <div className="space-y-3">
                   <p><span className="font-medium">Phone:</span> {patient.data.phoneNumber || 'Not provided'}</p>
-                  <p><span className="font-medium">Address:</span> {patient.data.address ? 
-                    `${patient.data.address.street}, ${patient.data.address.city}, ${patient.data.address.state} ${patient.data.address.zipCode}` 
-                    : 'Not provided'}</p>
+                  <p><span className="font-medium">Address:</span> {patient.data.address || 'Not provided'}</p>
                   <p><span className="font-medium">Emergency Contact:</span> {patient.data.emergencyContact ? 
                     `${patient.data.emergencyContact.name} (${patient.data.emergencyContact.relationship}) - ${patient.data.emergencyContact.phoneNumber}` 
                     : 'Not provided'}</p>

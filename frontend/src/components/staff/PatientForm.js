@@ -14,12 +14,7 @@ const PatientForm = () => {
     phoneNumber: '',
     dateOfBirth: '',
     gender: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      zipCode: ''
-    },
+    address: '',
     emergencyContact: {
       name: '',
       relationship: '',
@@ -40,12 +35,7 @@ const PatientForm = () => {
         setFormData({
           ...patientData,
           dateOfBirth: patientData.dateOfBirth?.split('T')[0] || '',
-          address: patientData.address || {
-            street: '',
-            city: '',
-            state: '',
-            zipCode: ''
-          },
+          address: patientData.address || '',
           emergencyContact: patientData.emergencyContact || {
             name: '',
             relationship: '',
@@ -204,66 +194,18 @@ const PatientForm = () => {
         {/* Address */}
         <div className="mb-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">Address</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="address.street">
-                Street Address
-              </label>
-              <input
-                type="text"
-                id="address.street"
-                name="address.street"
-                value={formData.address.street}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="address.city">
-                City
-              </label>
-              <input
-                type="text"
-                id="address.city"
-                name="address.city"
-                value={formData.address.city}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="address.state">
-                State
-              </label>
-              <input
-                type="text"
-                id="address.state"
-                name="address.state"
-                value={formData.address.state}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-gray-700 mb-2" htmlFor="address.zipCode">
-                ZIP Code
-              </label>
-              <input
-                type="text"
-                id="address.zipCode"
-                name="address.zipCode"
-                value={formData.address.zipCode}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-gray-700 mb-2" htmlFor="address">
+              Address
+            </label>
+            <textarea
+              id="address"
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              rows="2"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            ></textarea>
           </div>
         </div>
 

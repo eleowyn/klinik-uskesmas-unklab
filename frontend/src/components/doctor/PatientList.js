@@ -101,7 +101,7 @@ const PatientList = () => {
                       </span>
                       <span>
                         <i className="fas fa-phone mr-1"></i>
-                        {patient.phone}
+                        {patient.phoneNumber}
                       </span>
                       <span className="capitalize">
                         <i className="fas fa-venus-mars mr-1"></i>

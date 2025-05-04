@@ -17,8 +17,20 @@ export const getDoctorPatients = async () => {
     console.log('Fetching doctor patients...');
     const response = await api.get('/doctors/patients');
     console.log('Doctor patients response:', response.data);
-    // The backend now returns the array directly
-    return response.data;
+    
+    // Extract patients from the response data and ensure it's an array
+    const patients = Array.isArray(response.data?.data) ? response.data.data : [];
+    
+    console.log('Processed patients:', {
+      count: patients.length,
+      samplePatient: patients[0] ? {
+        id: patients[0]._id,
+        name: patients[0].fullName,
+        fields: Object.keys(patients[0])
+      } : null
+    });
+    
+    return patients;
   } catch (error) {
     console.error('Error fetching patients:', error);
     console.error('Full error object:', error);
@@ -30,7 +42,7 @@ export const getPatientDetails = async (patientId) => {
   try {
     const response = await api.get(`/doctors/patients/${patientId}`);
     console.log('API Response:', response);
-    return response.data;  // The data is already unwrapped by responseFormatter
+    return response.data.data;  // Extract data from responseFormatter wrapper
   } catch (error) {
     console.error('Error fetching patient details:', error);
     throw error.response?.data?.message || 'Failed to fetch patient details';
