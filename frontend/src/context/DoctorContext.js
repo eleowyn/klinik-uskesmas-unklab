@@ -23,30 +23,63 @@ export const DoctorProvider = ({ children }) => {
     setLoading(true);
     setError(null);
 
-    try {
-      const [profile, patients, prescriptions, appointments] = await Promise.all([
-        doctorService.getDoctorProfile(),
-        doctorService.getDoctorPatients(),
-        doctorService.getDoctorPrescriptions(),
-        doctorService.getDoctorAppointments()
-      ]);
+    const maxRetries = 3;
+    let attempt = 0;
+    let success = false;
+    let lastError = null;
 
-      const newData = {
-        doctorProfile: profile,
-        patients: Array.isArray(patients) ? patients : [],
-        prescriptions: Array.isArray(prescriptions) ? prescriptions : [],
-        appointments: Array.isArray(appointments) ? appointments : []
-      };
+    while (attempt < maxRetries && !success) {
+      try {
+        // Get all data in parallel for better performance
+        const [profile, patients, prescriptions, appointments] = await Promise.all([
+          doctorService.getDoctorProfile(),
+          doctorService.getDoctorPatients(),
+          doctorService.getDoctorPrescriptions(),
+          doctorService.getDoctorAppointments()
+        ]);
 
-      setDashboardData(newData);
-      setError(null);
-    } catch (err) {
-      console.error('Error refreshing dashboard data:', err);
-      setError(err.message || 'Failed to refresh dashboard data');
-      showAlert(err.message || 'Failed to refresh dashboard data', 'error');
-    } finally {
-      setLoading(false);
+        // Enhanced debugging
+        console.log('Doctor Profile:', profile);
+        console.log('Raw Patients Data:', patients);
+        console.log('Doctor Data:', {
+          doctorId: profile?._id,
+          patientsCount: patients?.length,
+          prescriptionsCount: prescriptions?.length,
+          appointmentsCount: appointments?.length
+        });
+
+        const newData = {
+          doctorProfile: profile,
+          patients: Array.isArray(patients) ? patients : [],
+          prescriptions: Array.isArray(prescriptions) ? prescriptions : [],
+          appointments: Array.isArray(appointments) ? appointments : []
+        };
+
+        // Log the data we're setting
+        console.log('Setting Dashboard Data:', {
+          patientsCount: newData.patients.length,
+          prescriptionsCount: newData.prescriptions.length,
+          appointmentsCount: newData.appointments.length
+        });
+
+        setDashboardData(newData);
+        setError(null);
+        success = true;
+      } catch (err) {
+        lastError = err;
+        attempt++;
+        console.error(`Attempt ${attempt} failed to refresh dashboard data:`, err);
+        if (attempt >= maxRetries) {
+          setError(err.message || 'Failed to refresh dashboard data');
+          showAlert(err.message || 'Failed to refresh dashboard data', 'error');
+        } else {
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
     }
+
+    setLoading(false);
   }, [showAlert]);
 
   // Patient Management

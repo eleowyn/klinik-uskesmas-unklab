@@ -14,10 +14,14 @@ export const getDoctorProfile = async () => {
 // Patient Management
 export const getDoctorPatients = async () => {
   try {
+    console.log('Fetching doctor patients...');
     const response = await api.get('/doctors/patients');
-    return response.data.data;
+    console.log('Doctor patients response:', response.data);
+    // The backend now returns the array directly
+    return response.data;
   } catch (error) {
     console.error('Error fetching patients:', error);
+    console.error('Full error object:', error);
     throw error.response?.data?.message || 'Failed to fetch patients';
   }
 };
@@ -25,7 +29,8 @@ export const getDoctorPatients = async () => {
 export const getPatientDetails = async (patientId) => {
   try {
     const response = await api.get(`/doctors/patients/${patientId}`);
-    return response.data.data;
+    console.log('API Response:', response);
+    return response.data;  // The data is already unwrapped by responseFormatter
   } catch (error) {
     console.error('Error fetching patient details:', error);
     throw error.response?.data?.message || 'Failed to fetch patient details';
@@ -56,7 +61,13 @@ export const getDoctorPrescriptions = async () => {
 export const getPrescriptionDetails = async (prescriptionId) => {
   try {
     const response = await api.get(`/doctors/prescriptions/${prescriptionId}`);
-    return response.data.data;
+    console.log('Raw prescription response:', response);
+    // Check if the response has data property and unwrap accordingly
+    const prescriptionData = response.data?.data || response.data;
+    if (!prescriptionData) {
+      throw new Error('No prescription data received');
+    }
+    return prescriptionData;
   } catch (error) {
     console.error('Error fetching prescription details:', error);
     throw error.response?.data?.message || 'Failed to fetch prescription details';

@@ -21,6 +21,13 @@ const auth = async (req, res, next) => {
       
       // Get user from token
       const user = await User.findById(decoded.userId);
+      console.log('Auth Middleware - Token decoded:', {
+        decodedUserId: decoded.userId,
+        userFound: !!user,
+        userRole: user?.role,
+        userActive: user?.isActive
+      });
+
       if (!user) {
         return res.status(401).json({
           status: 'error',
@@ -35,8 +42,17 @@ const auth = async (req, res, next) => {
         });
       }
 
-      // Add user to request
-      req.user = user;
+      // Add user to request with explicit id field
+      req.user = {
+        id: user._id.toString(), // Ensure we're using string ID
+        role: user.role,
+        isActive: user.isActive
+      };
+
+      console.log('Auth Middleware - User set on request:', {
+        userId: req.user.id,
+        userRole: req.user.role
+      });
       next();
     } catch (error) {
       return res.status(401).json({

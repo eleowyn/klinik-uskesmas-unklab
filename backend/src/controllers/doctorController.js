@@ -8,7 +8,8 @@ const { responseFormatter } = require('../utils/responseFormatter');
 exports.getProfile = async (req, res) => {
   try {
     const doctorProfile = await Doctor.findOne({ user: req.user.id })
-      .populate('user', '-password');
+      .populate('user', '-password')
+      .lean();
 
     if (!doctorProfile) {
       return res.status(404).json(responseFormatter({
@@ -16,6 +17,25 @@ exports.getProfile = async (req, res) => {
         message: 'Doctor profile not found'
       }));
     }
+
+    // Get actual counts from collections with populated data
+    const [patients, appointments] = await Promise.all([
+      Patient.find({ doctors: doctorProfile._id })
+        .lean()
+        .populate('user', '-password'),
+      Appointment.find({ doctor: doctorProfile._id })
+        .lean()
+        .populate({
+          path: 'patient',
+          select: 'fullName'
+        })
+    ]);
+
+    // Update the profile with actual data
+    doctorProfile.patients = patients;
+    doctorProfile.appointments = appointments;
+
+    console.log(`Found ${patients.length} patients and ${appointments.length} appointments for doctor ${doctorProfile._id}`);
 
     res.json(responseFormatter({
       status: 'success',
@@ -33,22 +53,46 @@ exports.getProfile = async (req, res) => {
 // Patients
 exports.getPatients = async (req, res) => {
   try {
-    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    // Use the doctorProfile that was attached by roleCheck middleware
+    const doctorProfile = req.doctorProfile;
+    
     if (!doctorProfile) {
+      console.error('Doctor profile not found in middleware');
       return res.status(404).json(responseFormatter({
         status: 'error',
         message: 'Doctor profile not found'
       }));
     }
+    
+    console.log('getPatients - Using doctorProfile from middleware:', {
+      doctorId: doctorProfile._id,
+      userId: req.user.id,
+      name: doctorProfile.fullName
+    });
 
-    const patients = await Patient.find({ doctors: doctorProfile._id })
-      .populate('user', '-password')
-      .sort({ fullName: 1 });
+    // Use lean() for better performance and convert to plain JavaScript objects
+    console.log('Finding patients for doctor:', doctorProfile._id);
+    
+    const patients = await Patient.find({ 
+      doctors: doctorProfile._id 
+    })
+    .lean()
+    .populate('user', '-password')
+    .sort({ fullName: 1 });
 
-    res.json(responseFormatter({
-      status: 'success',
-      data: patients
-    }));
+    console.log('Patient query results:', {
+      doctorId: doctorProfile._id,
+      patientsFound: patients.length,
+      patientIds: patients.map(p => p._id),
+      patients: patients.map(p => ({
+        id: p._id,
+        name: p.fullName,
+        doctors: p.doctors
+      }))
+    });
+
+    // Return the raw patients array without wrapping in data property
+    res.json(patients);
   } catch (error) {
     console.error('Error in getPatients:', error);
     res.status(500).json(responseFormatter({
@@ -157,7 +201,11 @@ exports.getPrescriptions = async (req, res) => {
     }
 
     const prescriptions = await Prescription.find({ doctor: doctorProfile._id })
-      .populate('patient', 'fullName')
+      .lean()
+      .populate({
+        path: 'patient',
+        select: 'fullName'
+      })
       .sort({ date: -1 });
 
     res.json(responseFormatter({
@@ -166,6 +214,50 @@ exports.getPrescriptions = async (req, res) => {
     }));
   } catch (error) {
     console.error('Error in getPrescriptions:', error);
+    res.status(500).json(responseFormatter({
+      status: 'error',
+      message: error.message
+    }));
+  }
+};
+
+exports.getPrescriptionDetails = async (req, res) => {
+  try {
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
+      console.error('Doctor profile not found for user:', req.user.id);
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor profile not found'
+      }));
+    }
+
+    console.log(`Fetching prescription ${req.params.id} for doctor ${doctorProfile._id}`);
+
+    const prescription = await Prescription.findOne({
+      _id: req.params.id,
+      doctor: doctorProfile._id
+    })
+    .populate({
+      path: 'patient',
+      select: 'fullName gender dateOfBirth'
+    })
+    .lean();  // Convert to plain JavaScript object for better performance
+
+    if (!prescription) {
+      console.error(`Prescription ${req.params.id} not found for doctor ${doctorProfile._id}`);
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Prescription not found'
+      }));
+    }
+
+    res.json(responseFormatter({
+      status: 'success',
+      data: prescription
+    }));
+  } catch (error) {
+    console.error('Error in getPrescriptionDetails:', error);
     res.status(500).json(responseFormatter({
       status: 'error',
       message: error.message
@@ -215,9 +307,18 @@ exports.getAppointments = async (req, res) => {
       }));
     }
 
-    const appointments = await Appointment.find({ doctor: doctorProfile._id })
-      .populate('patient', 'fullName')
-      .sort({ date: 1 });
+    // Use lean() for better performance and populate patient details
+    const appointments = await Appointment.find({ 
+      doctor: doctorProfile._id
+    })
+    .lean()
+    .populate({
+      path: 'patient',
+      select: 'fullName'
+    })
+    .sort({ date: 1 });
+
+    console.log(`Found ${appointments.length} appointments for doctor ${doctorProfile._id}`);
 
     res.json(responseFormatter({
       status: 'success',
@@ -291,7 +392,11 @@ exports.getSchedule = async (req, res) => {
     if (endDate) query.date.$lte = new Date(endDate);
 
     const appointments = await Appointment.find(query)
-      .populate('patient', 'fullName')
+      .lean()
+      .populate({
+        path: 'patient',
+        select: 'fullName'
+      })
       .sort({ date: 1 });
 
     res.json(responseFormatter({

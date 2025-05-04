@@ -16,6 +16,7 @@ const PatientDetails = () => {
     const fetchPatientDetails = async () => {
       try {
         const patientData = await getPatientDetails(id);
+        console.log('Patient data received:', patientData);
         setPatient(patientData);
       } catch (err) {
         console.error('Error fetching patient details:', err);
@@ -36,7 +37,7 @@ const PatientDetails = () => {
     );
   }
 
-  if (!patient) {
+  if (!patient?.data) {
     return (
       <div className="text-center py-8">
         <h2 className="text-2xl font-bold text-gray-800">Patient not found</h2>
@@ -52,22 +53,31 @@ const PatientDetails = () => {
       {/* Header */}
       <div className="bg-white shadow rounded-lg p-6 mb-6">
         <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">{patient.fullName}</h1>
-            <p className="text-gray-600">
-              {patient.gender}, {patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : 'DOB not provided'}
-            </p>
+          <div className="flex items-center space-x-4">
+            <Link
+              to="/doctor/patients"
+              className="text-gray-600 hover:text-gray-800"
+            >
+              <i className="fas fa-arrow-left"></i>
+              <span className="ml-2">Back to Patients</span>
+            </Link>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800 mb-2">{patient.data.fullName}</h1>
+              <p className="text-gray-600">
+                {patient.data.gender}, {patient.data.dateOfBirth ? new Date(patient.data.dateOfBirth).toLocaleDateString() : 'DOB not provided'}
+              </p>
+            </div>
           </div>
           <div className="flex space-x-3">
             <Link
-              to={`/doctor/prescriptions/new?patientId=${patient._id}`}
+              to={`/doctor/prescriptions/new?patientId=${patient.data._id}`}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
             >
               <i className="fas fa-prescription mr-2"></i>
               New Prescription
             </Link>
             <Link
-              to={`/doctor/appointments/new?patientId=${patient._id}`}
+              to={`/doctor/appointments/new?patientId=${patient.data._id}`}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition"
             >
               <i className="fas fa-calendar-plus mr-2"></i>
@@ -120,17 +130,21 @@ const PatientDetails = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
                 <div className="space-y-3">
-                  <p><span className="font-medium">Phone:</span> {patient.phoneNumber || 'Not provided'}</p>
-                  <p><span className="font-medium">Address:</span> {patient.address || 'Not provided'}</p>
-                  <p><span className="font-medium">Emergency Contact:</span> {patient.emergencyContact || 'Not provided'}</p>
+                  <p><span className="font-medium">Phone:</span> {patient.data.phoneNumber || 'Not provided'}</p>
+                  <p><span className="font-medium">Address:</span> {patient.data.address ? 
+                    `${patient.data.address.street}, ${patient.data.address.city}, ${patient.data.address.state} ${patient.data.address.zipCode}` 
+                    : 'Not provided'}</p>
+                  <p><span className="font-medium">Emergency Contact:</span> {patient.data.emergencyContact ? 
+                    `${patient.data.emergencyContact.name} (${patient.data.emergencyContact.relationship}) - ${patient.data.emergencyContact.phoneNumber}` 
+                    : 'Not provided'}</p>
                 </div>
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Medical Information</h3>
                 <div className="space-y-3">
-                  <p><span className="font-medium">Blood Type:</span> {patient.bloodType || 'Not provided'}</p>
-                  <p><span className="font-medium">Allergies:</span> {patient.allergies?.join(', ') || 'None reported'}</p>
-                  <p><span className="font-medium">Medical Conditions:</span> {patient.medicalConditions?.join(', ') || 'None reported'}</p>
+                  <p><span className="font-medium">Blood Type:</span> {patient.data.bloodType || 'Not provided'}</p>
+                  <p><span className="font-medium">Allergies:</span> {patient.data.allergies || 'None reported'}</p>
+                  <p><span className="font-medium">Medical Conditions:</span> {patient.data.medicalConditions || 'None reported'}</p>
                 </div>
               </div>
             </div>
@@ -139,9 +153,9 @@ const PatientDetails = () => {
           {activeTab === 'prescriptions' && (
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Prescription History</h3>
-              {patient.prescriptions?.length > 0 ? (
+              {patient.data.prescriptions?.length > 0 ? (
                 <div className="space-y-4">
-                  {patient.prescriptions.map(prescription => (
+                  {patient.data.prescriptions.map(prescription => (
                     <div key={prescription._id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start">
                         <div>
@@ -167,9 +181,9 @@ const PatientDetails = () => {
           {activeTab === 'appointments' && (
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Appointment History</h3>
-              {patient.appointments?.length > 0 ? (
+              {patient.data.appointments?.length > 0 ? (
                 <div className="space-y-4">
-                  {patient.appointments.map(appointment => (
+                  {patient.data.appointments.map(appointment => (
                     <div key={appointment._id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start">
                         <div>

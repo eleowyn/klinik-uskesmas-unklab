@@ -22,7 +22,7 @@ const AppointmentItem = ({ appointment }) => (
   <div className="flex items-center p-4 bg-white rounded-lg border border-gray-100 mb-3 hover:shadow-sm transition-shadow">
     <div className="w-2 h-2 rounded-full bg-blue-500 mr-4"></div>
     <div className="flex-1">
-      <h4 className="font-medium text-gray-800">{appointment.patientName}</h4>
+      <h4 className="font-medium text-gray-800">{appointment.patient?.fullName}</h4>
       <p className="text-sm text-gray-500">{new Date(appointment.date).toLocaleString()}</p>
     </div>
     <div className={`px-3 py-1 rounded-full text-sm ${
@@ -41,7 +41,7 @@ const PrescriptionItem = ({ prescription }) => (
       <i className="fas fa-prescription text-purple-500"></i>
     </div>
     <div className="flex-1">
-      <h4 className="font-medium text-gray-800">{prescription.patientName}</h4>
+      <h4 className="font-medium text-gray-800">{prescription.patient?.fullName}</h4>
       <p className="text-sm text-gray-500">{new Date(prescription.date).toLocaleDateString()}</p>
     </div>
     <Link 
@@ -56,12 +56,23 @@ const PrescriptionItem = ({ prescription }) => (
 const DoctorDashboard = ({ dashboardData }) => {
   const { patients, appointments, prescriptions, doctorProfile } = dashboardData;
 
-  // Get today's appointments
+  console.log('DoctorDashboard received data:', {
+    doctorId: doctorProfile?._id,
+    patientsCount: patients?.length,
+    patientsList: patients,
+    appointmentsCount: appointments?.length,
+    prescriptionsCount: prescriptions?.length
+  });
+
+  // Get today's appointments (excluding cancelled ones)
   const todayAppointments = appointments.filter(apt => {
     const aptDate = new Date(apt.date);
     const today = new Date();
-    return aptDate.toDateString() === today.toDateString();
+    return aptDate.toDateString() === today.toDateString() && apt.status !== 'cancelled';
   });
+
+  // Get active appointments (not cancelled)
+  const activeAppointments = appointments.filter(apt => apt.status !== 'cancelled');
 
   // Get recent prescriptions
   const recentPrescriptions = prescriptions.slice(0, 5);
@@ -100,8 +111,8 @@ const DoctorDashboard = ({ dashboardData }) => {
           link="/doctor/prescriptions"
         />
         <DashboardCard
-          title="Pending Reviews"
-          value={appointments.filter(apt => apt.status === 'pending').length}
+          title="Active Appointments"
+          value={activeAppointments.length}
           icon="fas fa-clock"
           color="bg-yellow-500"
           link="/doctor/schedule"

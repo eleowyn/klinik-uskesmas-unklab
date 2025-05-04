@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AlertContext } from '../../context/AlertContext';
 import { getPatientDetails } from '../../services/staffService';
@@ -10,11 +10,7 @@ const PatientDetails = () => {
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchPatientDetails();
-  }, [id]);
-
-  const fetchPatientDetails = async () => {
+  const fetchPatientDetails = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getPatientDetails(id);
@@ -25,7 +21,11 @@ const PatientDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, showAlert, navigate]);
+
+  useEffect(() => {
+    fetchPatientDetails();
+  }, [fetchPatientDetails]);
 
   if (loading) {
     return (
@@ -38,6 +38,8 @@ const PatientDetails = () => {
   if (!patient) {
     return null;
   }
+
+  const allergiesDisplay = patient.allergies || 'No allergies recorded';
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -100,7 +102,7 @@ const PatientDetails = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-600">Allergies</label>
                 <p className="mt-1 text-gray-900">
-                  {patient.allergies || 'No allergies recorded'}
+                  {allergiesDisplay}
                 </p>
               </div>
               <div>

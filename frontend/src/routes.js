@@ -9,10 +9,11 @@ import StaffPortal from './pages/StaffPortal';
 import PatientPortal from './pages/PatientPortal';
 
 // Doctor Components
-import DoctorDashboard from './components/doctor/DoctorDashboard';
+import DoctorContent from './components/doctor/DoctorContent';
 import PatientList from './components/doctor/PatientList';
 import DoctorPatientDetails from './components/doctor/PatientDetails';
 import PrescriptionForm from './components/doctor/PrescriptionForm';
+import PrescriptionDetail from './components/doctor/PrescriptionDetail';
 import PrescriptionList from './components/doctor/PrescriptionList';
 import Schedule from './components/doctor/Schedule';
 
@@ -60,7 +61,7 @@ const routes = [
       },
       {
         path: 'dashboard',
-        element: <DoctorDashboard />
+        element: <DoctorContent />
       },
       {
         path: 'patients',
@@ -77,6 +78,10 @@ const routes = [
       {
         path: 'prescriptions/new',
         element: <PrescriptionForm />
+      },
+      {
+        path: 'prescriptions/:id',
+        element: <PrescriptionDetail />
       },
       {
         path: 'schedule',

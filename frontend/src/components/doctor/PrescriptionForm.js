@@ -28,10 +28,10 @@ const PrescriptionForm = () => {
     const fetchPatients = async () => {
       try {
         const response = await getDoctorPatients();
-        setPatients(response.data || []);
+        setPatients(response || []);
         
         if (patientId) {
-          const patient = response.data.find(p => p._id === patientId);
+          const patient = response.find(p => p._id === patientId);
           setSelectedPatient(patient);
         }
       } catch (err) {
@@ -146,7 +146,7 @@ const PrescriptionForm = () => {
             <p><span className="font-medium">Gender:</span> {selectedPatient.gender}</p>
             <p><span className="font-medium">Age:</span> {selectedPatient.dateOfBirth ? 
               new Date().getFullYear() - new Date(selectedPatient.dateOfBirth).getFullYear() : 'N/A'} years</p>
-            {selectedPatient.allergies && (
+            {Array.isArray(selectedPatient.allergies) && selectedPatient.allergies.length > 0 && (
               <p className="text-red-600"><span className="font-medium">Allergies:</span> {selectedPatient.allergies.join(', ')}</p>
             )}
           </div>
