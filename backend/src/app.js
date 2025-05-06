@@ -8,10 +8,21 @@ const staffRoutes = require('./routes/staffRoutes');
 const patientRoutes = require('./routes/patientRoutes');
 const clinicRoutes = require('./routes/clinicRoutes');
 
+const { assignAllPatientsToDoctor } = require('./scripts/assignAllPatientsToDoctor');
+
 const app = express();
 
 // Connect to MongoDB
-connectDB();
+connectDB().then(async () => {
+  // Automatically assign all patients to the doctor on server startup
+  const doctorUserId = '6815f89dc2a3e80d7dd354c4'; // Replace with actual doctor user ID
+  try {
+    const assignedCount = await assignAllPatientsToDoctor(doctorUserId);
+    console.log(`Auto-assigned ${assignedCount} patients to doctor ${doctorUserId} on startup.`);
+  } catch (error) {
+    console.error('Error auto-assigning patients to doctor on startup:', error);
+  }
+});
 
 // Middleware
 app.use(morgan('dev'));

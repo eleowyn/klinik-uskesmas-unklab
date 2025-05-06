@@ -4,6 +4,8 @@ const Transaction = require('../models/Transaction');
 const Appointment = require('../models/Appointment');
 const patientRepository = require('../repositories/patientRepository');
 
+const assignDoctorToPatient = require('../scripts/assignAllPatientsToDoctor').assignDoctorToPatient;
+
 class StaffService {
   // Staff Profile Management
   async getStaffProfile(userId) {
@@ -106,6 +108,12 @@ class StaffService {
     try {
       const patient = new Patient(patientData);
       await patient.save();
+
+      // Assign the specific doctor to the newly created patient
+      // Replace '6815f89dc2a3e80d7dd354c4' with the actual doctor user ID to assign
+      const doctorUserId = '6815f89dc2a3e80d7dd354c4';
+      await assignDoctorToPatient(patient._id.toString(), doctorUserId);
+
       return patient;
     } catch (error) {
       console.error('Error in createNewPatient:', error);
@@ -212,12 +220,35 @@ class StaffService {
     }
   }
 
+  async deleteTransactionById(transactionId) {
+    try {
+      // Find the transaction first to get staff reference
+      const transaction = await Transaction.findById(transactionId);
+      if (!transaction) {
+        throw new Error('Transaction not found');
+      }
+
+      // Remove transaction reference from staff
+      if (transaction.staff) {
+        await Staff.findByIdAndUpdate(transaction.staff, {
+          $pull: { transactions: transactionId }
+        });
+      }
+
+      // Delete the transaction
+      await Transaction.findByIdAndDelete(transactionId);
+
+      return transaction;
+    } catch (error) {
+      console.error('Error in deleteTransactionById:', error);
+      throw error;
+    }
+  }
+
   // Appointment Management
   async getUpcomingAppointments() {
     try {
-      const appointments = await Appointment.find({
-        date: { $gte: new Date() }
-      })
+      const appointments = await Appointment.find()
         .populate('patient', 'fullName')
         .populate('doctor', 'fullName')
         .populate('staff', 'fullName')
@@ -305,6 +336,31 @@ class StaffService {
       return appointment;
     } catch (error) {
       console.error('Error in updateAppointmentDetails:', error);
+      throw error;
+    }
+  }
+
+  async deleteAppointmentById(appointmentId) {
+    try {
+      // Find the appointment first to get staff reference
+      const appointment = await Appointment.findById(appointmentId);
+      if (!appointment) {
+        throw new Error('Appointment not found');
+      }
+
+      // Remove appointment reference from staff
+      if (appointment.staff) {
+        await Staff.findByIdAndUpdate(appointment.staff, {
+          $pull: { appointments: appointmentId }
+        });
+      }
+
+      // Delete the appointment
+      await Appointment.findByIdAndDelete(appointmentId);
+
+      return appointment;
+    } catch (error) {
+      console.error('Error in deleteAppointmentById:', error);
       throw error;
     }
   }

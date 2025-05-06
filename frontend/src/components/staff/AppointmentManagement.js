@@ -1,44 +1,33 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertContext } from '../../context/AlertContext';
-import { getUpcomingAppointments, deleteAppointment } from '../../services/staffService';
+import { useStaffContext } from '../../context/StaffContext';
+import { deleteAppointment } from '../../services/staffService';
 
 const AppointmentManagement = () => {
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const { showAlert } = useContext(AlertContext);
-
-  const fetchAppointments = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await getUpcomingAppointments();
-      setAppointments(data);
-    } catch (err) {
-      showAlert('Failed to load appointments: ' + err.message, 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [showAlert]);
+  const { dashboardData, refreshDashboardData, loading } = useStaffContext();
+  const { appointments } = dashboardData;
 
   useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+    refreshDashboardData();
+  }, [refreshDashboardData]);
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this appointment?')) {
       try {
         await deleteAppointment(id);
         showAlert('Appointment deleted successfully', 'success');
-        fetchAppointments();
+        refreshDashboardData();
       } catch (err) {
         showAlert('Failed to delete appointment: ' + err.message, 'error');
       }
     }
   };
 
-  const filteredAppointments = appointments.filter(appointment => {
+  const filteredAppointments = (appointments || []).filter(appointment => {
     const matchesSearch = 
       appointment.patient?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       appointment.doctor?.fullName?.toLowerCase().includes(searchTerm.toLowerCase());

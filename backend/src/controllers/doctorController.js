@@ -22,7 +22,8 @@ exports.getProfile = async (req, res) => {
     const [patients, appointments] = await Promise.all([
       Patient.find({ doctors: doctorProfile._id })
         .lean()
-        .populate('user', '-password'),
+        .populate('user', '-password')
+        .populate('doctors', 'fullName specialization'),
       Appointment.find({ doctor: doctorProfile._id })
         .lean()
         .populate({
@@ -31,11 +32,30 @@ exports.getProfile = async (req, res) => {
         })
     ]);
 
+    // Log detailed patient information for debugging
+    console.log('Doctor Profile:', {
+      doctorId: doctorProfile._id,
+      patientsFound: patients.length,
+      patientIds: patients.map(p => p._id),
+      patientNames: patients.map(p => p.fullName)
+    });
+
     // Update the profile with actual data
     doctorProfile.patients = patients;
     doctorProfile.appointments = appointments;
 
     console.log(`Found ${patients.length} patients and ${appointments.length} appointments for doctor ${doctorProfile._id}`);
+
+    // Double check patient-doctor relationships
+    const allPatients = await Patient.find({}).lean();
+    const patientsWithThisDoctor = allPatients.filter(p => 
+      p.doctors && p.doctors.some(d => d.toString() === doctorProfile._id.toString())
+    );
+    console.log('Cross-check:', {
+      totalPatientsInDB: allPatients.length,
+      patientsWithThisDoctor: patientsWithThisDoctor.length,
+      patientIds: patientsWithThisDoctor.map(p => p._id)
+    });
 
     res.json(responseFormatter({
       status: 'success',
@@ -67,7 +87,8 @@ exports.getPatients = async (req, res) => {
     const patients = await Patient.find({ 
       doctors: doctorProfile._id 
     })
-    .select('fullName email phoneNumber gender dateOfBirth address')
+    .populate('user', '-password')
+    .populate('doctors', 'fullName specialization')
     .sort({ fullName: 1 })
     .lean();
 
@@ -226,10 +247,16 @@ exports.getPrescriptionDetails = async (req, res) => {
       _id: req.params.id,
       doctor: doctorProfile._id
     })
-    .populate({
-      path: 'patient',
-      select: 'fullName gender dateOfBirth'
-    })
+    .populate([
+      {
+        path: 'patient',
+        select: 'fullName gender dateOfBirth'
+      },
+      {
+        path: 'doctor',
+        select: 'fullName specialization no_sip'
+      }
+    ])
     .lean();  // Convert to plain JavaScript object for better performance
 
     if (!prescription) {
@@ -314,6 +341,81 @@ exports.getAppointments = async (req, res) => {
     }));
   } catch (error) {
     console.error('Error in getAppointments:', error);
+    res.status(500).json(responseFormatter({
+      status: 'error',
+      message: error.message
+    }));
+  }
+};
+
+// Update Prescription
+exports.updatePrescription = async (req, res) => {
+  try {
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor profile not found'
+      }));
+    }
+
+    const prescription = await Prescription.findOne({
+      _id: req.params.id,
+      doctor: doctorProfile._id
+    });
+
+    if (!prescription) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Prescription not found'
+      }));
+    }
+
+    Object.assign(prescription, req.body);
+    await prescription.save();
+
+    res.json(responseFormatter({
+      status: 'success',
+      data: prescription
+    }));
+  } catch (error) {
+    console.error('Error in updatePrescription:', error);
+    res.status(500).json(responseFormatter({
+      status: 'error',
+      message: error.message
+    }));
+  }
+};
+
+// Delete Prescription
+exports.deletePrescription = async (req, res) => {
+  try {
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor profile not found'
+      }));
+    }
+
+    const prescription = await Prescription.findOneAndDelete({
+      _id: req.params.id,
+      doctor: doctorProfile._id
+    });
+
+    if (!prescription) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Prescription not found'
+      }));
+    }
+
+    res.json(responseFormatter({
+      status: 'success',
+      message: 'Prescription deleted successfully'
+    }));
+  } catch (error) {
+    console.error('Error in deletePrescription:', error);
     res.status(500).json(responseFormatter({
       status: 'error',
       message: error.message

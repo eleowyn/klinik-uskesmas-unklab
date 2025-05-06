@@ -31,6 +31,8 @@ router.post('/patients/:patientId/assign', doctorAuth, doctorController.assignPa
 router.get('/prescriptions', doctorAuth, doctorController.getPrescriptions);
 router.get('/prescriptions/:id', doctorAuth, doctorController.getPrescriptionDetails);
 router.post('/prescriptions', doctorAuth, doctorController.createPrescription);
+router.put('/prescriptions/:id', doctorAuth, doctorController.updatePrescription);
+router.delete('/prescriptions/:id', doctorAuth, doctorController.deletePrescription);
 
 // Appointment Routes
 router.get('/appointments', doctorAuth, doctorController.getAppointments);

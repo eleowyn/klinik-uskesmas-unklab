@@ -8,7 +8,6 @@ const PrescriptionList = () => {
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
     const loadData = async () => {
@@ -27,10 +26,9 @@ const PrescriptionList = () => {
 
   const filteredPrescriptions = dashboardData.prescriptions
     .filter(prescription => {
-      const matchesSearch = prescription.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          prescription.diagnosis?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterStatus === 'all' || prescription.status === filterStatus;
-      return matchesSearch && matchesFilter;
+      return prescription.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             prescription.diagnosis?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+             prescription.doctor?.fullName?.toLowerCase().includes(searchTerm.toLowerCase());
     })
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -56,27 +54,17 @@ const PrescriptionList = () => {
         </Link>
       </div>
 
-      {/* Filters */}
+      {/* Search */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <input
             type="text"
-            placeholder="Search prescriptions..."
+            placeholder="Search by patient name, diagnosis, or doctor..."
             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <select
-          className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="completed">Completed</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
       </div>
 
       {/* Prescriptions List */}
@@ -86,34 +74,88 @@ const PrescriptionList = () => {
             {filteredPrescriptions.map((prescription) => (
               <div
                 key={prescription._id}
-                className="p-4 hover:bg-gray-50 transition-colors"
+                className="p-6 hover:bg-gray-50 transition-colors"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-800">
-                      {prescription.patientName}
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      {new Date(prescription.date).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg font-medium text-gray-800">
+                        {prescription.patientName}
+                      </h3>
+                      <span className="text-sm text-gray-500">
+                        (ID: #{prescription._id?.slice(-6).toUpperCase()})
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                      <div>
+                        <p className="text-sm text-gray-600">
+                          <i className="fas fa-user-md mr-2"></i>
+                          Dr. {prescription.doctor?.fullName || 'Not available'}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <i className="fas fa-hospital mr-2"></i>
+                          {prescription.doctor?.specialization || 'General Practice'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">
+                          <i className="far fa-calendar-alt mr-2"></i>
+                          {new Date(prescription.date).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <i className="far fa-clock mr-2"></i>
+                          {new Date(prescription.date).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    </div>
                     {prescription.diagnosis && (
-                      <p className="mt-1 text-gray-600">{prescription.diagnosis}</p>
+                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                        <p className="text-sm text-gray-700 flex items-start">
+                          <i className="fas fa-stethoscope mt-1 mr-2 text-blue-500"></i>
+                          <span>{prescription.diagnosis}</span>
+                        </p>
+                      </div>
+                    )}
+                    {prescription.medications && prescription.medications.length > 0 && (
+                      <div className="mt-3 text-sm text-gray-600">
+                        <i className="fas fa-pills mr-2 text-gray-400"></i>
+                        {prescription.medications.length} medication(s) prescribed
+                      </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      prescription.status === 'active' ? 'bg-green-100 text-green-700' :
-                      prescription.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {prescription.status}
-                    </span>
+                  <div className="flex items-center gap-3">
                     <Link
                       to={`/doctor/prescriptions/${prescription._id}`}
-                      className="text-blue-500 hover:text-blue-600"
+                      className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                     >
-                      <i className="fas fa-chevron-right"></i>
+                      <i className="fas fa-eye mr-2"></i>
+                      View Details
                     </Link>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => {
+                          window.open(`/doctor/prescriptions/${prescription._id}/print`, '_blank');
+                        }}
+                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                        title="Print Prescription"
+                      >
+                        <i className="fas fa-print"></i>
+                      </button>
+                      <Link
+                        to={`/doctor/prescriptions/edit/${prescription._id}`}
+                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                        title="Edit Prescription"
+                      >
+                        <i className="fas fa-edit"></i>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>

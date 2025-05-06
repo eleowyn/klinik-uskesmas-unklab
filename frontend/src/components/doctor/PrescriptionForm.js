@@ -1,12 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { AlertContext } from '../../context/AlertContext';
-import { getDoctorPatients, createPrescription } from '../../services/doctorService';
+import { getDoctorPatients, createPrescription, getPrescriptionDetails, updatePrescription } from '../../services/doctorService';
 
 const PrescriptionForm = () => {
   const { showAlert } = useContext(AlertContext);
   const navigate = useNavigate();
   const location = useLocation();
+  const { id } = useParams(); // prescription id for edit mode
   
   const queryParams = new URLSearchParams(location.search);
   const patientId = queryParams.get('patientId');
@@ -21,6 +22,7 @@ const PrescriptionForm = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -40,6 +42,34 @@ const PrescriptionForm = () => {
     
     fetchPatients();
   }, [patientId, showAlert]);
+
+  useEffect(() => {
+    const fetchPrescription = async () => {
+      if (id) {
+        setIsEditMode(true);
+        setLoading(true);
+        try {
+          const prescription = await getPrescriptionDetails(id);
+          setFormData({
+            patient: prescription.patient?._id || '',
+            diagnosis: prescription.diagnosis || '',
+            notes: prescription.notes || '',
+            medications: prescription.medications.length > 0 ? prescription.medications : [{ name: '', dosage: '', frequency: '', duration: '', instructions: '' }],
+          });
+          if (prescription.patient?._id) {
+            const patient = patients.find(p => p._id === prescription.patient._id);
+            setSelectedPatient(patient);
+          }
+        } catch (err) {
+          showAlert('Failed to load prescription details', 'error');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchPrescription();
+  }, [id, patients, showAlert]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -99,11 +129,16 @@ const PrescriptionForm = () => {
         ),
       };
       
-      await createPrescription(prescriptionData);
-      showAlert('Prescription created successfully', 'success');
+      if (isEditMode && id) {
+        await updatePrescription(id, prescriptionData);
+        showAlert('Prescription updated successfully', 'success');
+      } else {
+        await createPrescription(prescriptionData);
+        showAlert('Prescription created successfully', 'success');
+      }
       navigate('/doctor/patients/' + formData.patient);
     } catch (err) {
-      showAlert(err.response?.data?.message || 'Failed to create prescription', 'error');
+      showAlert(err.response?.data?.message || 'Failed to save prescription', 'error');
     } finally {
       setLoading(false);
     }
@@ -111,7 +146,7 @@ const PrescriptionForm = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Create New Prescription</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">{isEditMode ? 'Edit Prescription' : 'Create New Prescription'}</h1>
       
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
         {!patientId && (

@@ -81,6 +81,10 @@ const routes = [
         element: <PrescriptionForm />
       },
       {
+        path: 'prescriptions/edit/:id',
+        element: <PrescriptionForm />
+      },
+      {
         path: 'prescriptions/:id',
         element: <PrescriptionDetail />
       },

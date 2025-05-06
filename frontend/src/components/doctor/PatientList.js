@@ -29,11 +29,15 @@ const PatientList = () => {
     .filter(patient => {
       const matchesSearch = 
         patient.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        patient.email?.toLowerCase().includes(searchTerm.toLowerCase());
+        patient.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.phoneNumber?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFilter = filterGender === 'all' || patient.gender === filterGender;
       return matchesSearch && matchesFilter;
     })
-    .sort((a, b) => a.fullName.localeCompare(b.fullName));
+    .sort((a, b) => {
+      if (!a.fullName || !b.fullName) return 0;
+      return a.fullName.localeCompare(b.fullName);
+    });
 
   if (loading) {
     return (
@@ -93,16 +97,25 @@ const PatientList = () => {
                   <div className="ml-4 flex-1">
                     <h3 className="text-lg font-medium text-gray-800">
                       {patient.fullName}
+                      {patient.bloodType && patient.bloodType !== 'unknown' && (
+                        <span className="ml-2 px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">
+                          {patient.bloodType}
+                        </span>
+                      )}
                     </h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span>
-                        <i className="fas fa-envelope mr-1"></i>
-                        {patient.email}
-                      </span>
-                      <span>
-                        <i className="fas fa-phone mr-1"></i>
-                        {patient.phoneNumber}
-                      </span>
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+                      {patient.email && (
+                        <span>
+                          <i className="fas fa-envelope mr-1"></i>
+                          {patient.email}
+                        </span>
+                      )}
+                      {patient.phoneNumber && (
+                        <span>
+                          <i className="fas fa-phone mr-1"></i>
+                          {patient.phoneNumber}
+                        </span>
+                      )}
                       <span className="capitalize">
                         <i className="fas fa-venus-mars mr-1"></i>
                         {patient.gender}
@@ -111,6 +124,12 @@ const PatientList = () => {
                         <i className="fas fa-calendar-alt mr-1"></i>
                         {new Date(patient.dateOfBirth).toLocaleDateString()}
                       </span>
+                      {patient.lastVisit && (
+                        <span className="text-blue-600">
+                          <i className="fas fa-clock mr-1"></i>
+                          Last Visit: {new Date(patient.lastVisit).toLocaleDateString()}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="text-blue-500">
