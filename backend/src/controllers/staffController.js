@@ -126,7 +126,9 @@ const createPatient = async (req, res, next) => {
       ...req.body
     };
 
-    const patient = await createNewPatient(patientData);
+    const doctorUserId = req.user.id; // Get doctor user ID from authenticated user
+
+    const patient = await createNewPatient(patientData, doctorUserId);
     console.log('createPatient: Created patient:', patient);
 
     res.status(201).json(responseFormatter({

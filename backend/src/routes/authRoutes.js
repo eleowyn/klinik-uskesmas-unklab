@@ -110,6 +110,14 @@ router.post('/register', async (req, res) => {
   try {
     const { email, password, role, ...profileData } = req.body;
 
+    // Allow registration for doctor and staff roles only
+    if (role !== 'doctor' && role !== 'staff') {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Registration allowed only for doctor and staff roles.'
+      });
+    }
+
     // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -117,6 +125,13 @@ router.post('/register', async (req, res) => {
         status: 'error',
         message: 'User already exists'
       });
+    }
+
+    // Remove employeeId from staff profileData as it will be auto-generated in database
+    if (role === 'staff') {
+      if ('employeeId' in profileData) {
+        delete profileData.employeeId;
+      }
     }
 
     // Create user
@@ -133,8 +148,6 @@ router.post('/register', async (req, res) => {
       profile = new Doctor({ ...profileData, user: user._id });
     } else if (role === 'staff') {
       profile = new Staff({ ...profileData, user: user._id });
-    } else if (role === 'patient') {
-      profile = new Patient({ ...profileData, user: user._id });
     }
     await profile.save();
 

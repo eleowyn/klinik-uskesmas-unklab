@@ -74,13 +74,6 @@ const PatientDetails = () => {
               <i className="fas fa-prescription mr-2"></i>
               New Prescription
             </Link>
-            <Link
-              to={`/doctor/appointments/new?patientId=${patient.data._id}`}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition"
-            >
-              <i className="fas fa-calendar-plus mr-2"></i>
-              Schedule Appointment
-            </Link>
           </div>
         </div>
       </div>
@@ -108,16 +101,6 @@ const PatientDetails = () => {
               onClick={() => setActiveTab('prescriptions')}
             >
               Prescriptions
-            </button>
-            <button
-              className={`px-6 py-3 text-sm font-medium ${
-                activeTab === 'appointments'
-                  ? 'border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-              onClick={() => setActiveTab('appointments')}
-            >
-              Appointments
             </button>
           </nav>
         </div>
@@ -170,37 +153,6 @@ const PatientDetails = () => {
                 </div>
               ) : (
                 <p className="text-gray-500">No prescriptions found</p>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'appointments' && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Appointment History</h3>
-              {patient.data.appointments?.length > 0 ? (
-                <div className="space-y-4">
-                  {patient.data.appointments.map(appointment => (
-                    <div key={appointment._id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium">{appointment.reason}</p>
-                          <p className="text-sm text-gray-600">
-                            {new Date(appointment.date).toLocaleDateString()} at {appointment.time}
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">Status: {appointment.status}</p>
-                        </div>
-                        <Link
-                          to={`/doctor/appointments/${appointment._id}`}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          View Details
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">No appointments found</p>
               )}
             </div>
           )}

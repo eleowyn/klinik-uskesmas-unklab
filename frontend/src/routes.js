@@ -16,6 +16,7 @@ import PrescriptionForm from './components/doctor/PrescriptionForm';
 import PrescriptionDetail from './components/doctor/PrescriptionDetail';
 import PrescriptionList from './components/doctor/PrescriptionList';
 import AppointmentList from './components/doctor/AppointmentList';
+import AppointmentDetails from './components/doctor/AppointmentDetails';
 import Schedule from './components/doctor/Schedule';
 
 // Staff Components
@@ -91,6 +92,10 @@ const routes = [
       {
         path: 'appointments',
         element: <AppointmentList />
+      },
+      {
+        path: 'appointments/:id',
+        element: <AppointmentDetails />
       },
       {
         path: 'schedule',

@@ -14,14 +14,8 @@ const app = express();
 
 // Connect to MongoDB
 connectDB().then(async () => {
-  // Automatically assign all patients to the doctor on server startup
-  const doctorUserId = '6815f89dc2a3e80d7dd354c4'; // Replace with actual doctor user ID
-  try {
-    const assignedCount = await assignAllPatientsToDoctor(doctorUserId);
-    console.log(`Auto-assigned ${assignedCount} patients to doctor ${doctorUserId} on startup.`);
-  } catch (error) {
-    console.error('Error auto-assigning patients to doctor on startup:', error);
-  }
+  // Auto-assignment of patients to doctor on startup is disabled as per user request
+  console.log('Auto-assignment of patients to doctor on startup is disabled.');
 });
 
 // Middleware

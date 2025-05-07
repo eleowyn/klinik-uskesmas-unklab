@@ -1,62 +1,18 @@
 const Doctor = require('../models/Doctor');
 const Patient = require('../models/Patient');
-const Prescription = require('../models/Prescription');
 const Appointment = require('../models/Appointment');
+const Prescription = require('../models/Prescription');
 const { responseFormatter } = require('../utils/responseFormatter');
 
-// Profile
 exports.getProfile = async (req, res) => {
   try {
-    const doctorProfile = await Doctor.findOne({ user: req.user.id })
-      .populate('user', '-password')
-      .lean();
-
+    const doctorProfile = await Doctor.findOne({ user: req.user.id }).populate('user', '-password');
     if (!doctorProfile) {
       return res.status(404).json(responseFormatter({
         status: 'error',
         message: 'Doctor profile not found'
       }));
     }
-
-    // Get actual counts from collections with populated data
-    const [patients, appointments] = await Promise.all([
-      Patient.find({ doctors: doctorProfile._id })
-        .lean()
-        .populate('user', '-password')
-        .populate('doctors', 'fullName specialization'),
-      Appointment.find({ doctor: doctorProfile._id })
-        .lean()
-        .populate({
-          path: 'patient',
-          select: 'fullName'
-        })
-    ]);
-
-    // Log detailed patient information for debugging
-    console.log('Doctor Profile:', {
-      doctorId: doctorProfile._id,
-      patientsFound: patients.length,
-      patientIds: patients.map(p => p._id),
-      patientNames: patients.map(p => p.fullName)
-    });
-
-    // Update the profile with actual data
-    doctorProfile.patients = patients;
-    doctorProfile.appointments = appointments;
-
-    console.log(`Found ${patients.length} patients and ${appointments.length} appointments for doctor ${doctorProfile._id}`);
-
-    // Double check patient-doctor relationships
-    const allPatients = await Patient.find({}).lean();
-    const patientsWithThisDoctor = allPatients.filter(p => 
-      p.doctors && p.doctors.some(d => d.toString() === doctorProfile._id.toString())
-    );
-    console.log('Cross-check:', {
-      totalPatientsInDB: allPatients.length,
-      patientsWithThisDoctor: patientsWithThisDoctor.length,
-      patientIds: patientsWithThisDoctor.map(p => p._id)
-    });
-
     res.json(responseFormatter({
       status: 'success',
       data: doctorProfile
@@ -70,34 +26,16 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// Patients
 exports.getPatients = async (req, res) => {
   try {
     const doctorProfile = await Doctor.findOne({ user: req.user.id });
-    
     if (!doctorProfile) {
-      console.error('Doctor profile not found');
       return res.status(404).json(responseFormatter({
         status: 'error',
         message: 'Doctor profile not found'
       }));
     }
-
-    // Get all patients assigned to this doctor
-    const patients = await Patient.find({ 
-      doctors: doctorProfile._id 
-    })
-    .populate('user', '-password')
-    .populate('doctors', 'fullName specialization')
-    .sort({ fullName: 1 })
-    .lean();
-
-    console.log('Found patients:', {
-      doctorId: doctorProfile._id,
-      patientsCount: patients.length,
-      patients: patients.map(p => ({ id: p._id, name: p.fullName }))
-    });
-
+    const patients = await Patient.find({ doctors: doctorProfile._id }).populate('user', '-password').lean();
     res.json(responseFormatter({
       status: 'success',
       data: patients
@@ -111,7 +49,6 @@ exports.getPatients = async (req, res) => {
   }
 };
 
-// Assign patient to doctor
 exports.assignPatientToDoctor = async (req, res) => {
   try {
     const doctorProfile = await Doctor.findOne({ user: req.user.id });
@@ -121,33 +58,20 @@ exports.assignPatientToDoctor = async (req, res) => {
         message: 'Doctor profile not found'
       }));
     }
-
-    const patientId = req.params.patientId;
-    const patient = await Patient.findById(patientId);
-
+    const patient = await Patient.findById(req.params.patientId);
     if (!patient) {
       return res.status(404).json(responseFormatter({
         status: 'error',
         message: 'Patient not found'
       }));
     }
-
-    // Check if doctor is already assigned
-    if (patient.doctors.includes(doctorProfile._id)) {
-      return res.status(400).json(responseFormatter({
-        status: 'error',
-        message: 'Doctor already assigned to this patient'
-      }));
+    if (!patient.doctors.includes(doctorProfile._id)) {
+      patient.doctors.push(doctorProfile._id);
+      await patient.save();
     }
-
-    // Add doctor to patient's doctors array
-    patient.doctors.push(doctorProfile._id);
-    await patient.save();
-
     res.json(responseFormatter({
       status: 'success',
-      message: 'Doctor assigned to patient successfully',
-      data: patient
+      message: 'Patient assigned to doctor successfully'
     }));
   } catch (error) {
     console.error('Error in assignPatientToDoctor:', error);
@@ -157,6 +81,47 @@ exports.assignPatientToDoctor = async (req, res) => {
     }));
   }
 };
+
+exports.getAppointmentDetails = async (req, res) => {
+  try {
+    const doctorProfile = await Doctor.findOne({ user: req.user.id });
+    if (!doctorProfile) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Doctor profile not found'
+      }));
+    }
+
+    const appointment = await Appointment.findOne({
+      _id: req.params.id,
+      doctor: doctorProfile._id
+    })
+    .populate({
+      path: 'patient',
+      select: 'fullName'
+    })
+    .lean();
+
+    if (!appointment) {
+      return res.status(404).json(responseFormatter({
+        status: 'error',
+        message: 'Appointment not found'
+      }));
+    }
+
+    res.json(responseFormatter({
+      status: 'success',
+      data: appointment
+    }));
+  } catch (error) {
+    console.error('Error in getAppointmentDetails:', error);
+    res.status(500).json(responseFormatter({
+      status: 'error',
+      message: error.message
+    }));
+  }
+};
+
 
 exports.getPatientDetails = async (req, res) => {
   try {
@@ -211,10 +176,16 @@ exports.getPrescriptions = async (req, res) => {
 
     const prescriptions = await Prescription.find({ doctor: doctorProfile._id })
       .lean()
-      .populate({
-        path: 'patient',
-        select: 'fullName'
-      })
+      .populate([
+        {
+          path: 'patient',
+          select: 'fullName'
+        },
+        {
+          path: 'doctor',
+          select: 'fullName specialization'
+        }
+      ])
       .sort({ date: -1 });
 
     res.json(responseFormatter({

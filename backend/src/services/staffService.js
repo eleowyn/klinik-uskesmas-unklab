@@ -104,15 +104,14 @@ class StaffService {
     }
   }
 
-  async createNewPatient(patientData) {
+  async createNewPatient(patientData, doctorUserId) {
     try {
       const patient = new Patient(patientData);
       await patient.save();
 
-      // Assign the specific doctor to the newly created patient
-      // Replace '6815f89dc2a3e80d7dd354c4' with the actual doctor user ID to assign
-      const doctorUserId = '6815f89dc2a3e80d7dd354c4';
-      await assignDoctorToPatient(patient._id.toString(), doctorUserId);
+      if (doctorUserId) {
+        await assignDoctorToPatient(patient._id.toString(), doctorUserId);
+      }
 
       return patient;
     } catch (error) {

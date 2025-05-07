@@ -42,7 +42,7 @@ export const getPatientDetails = async (patientId) => {
   try {
     const response = await api.get(`/doctors/patients/${patientId}`);
     console.log('API Response:', response);
-    return response.data.data;  // Extract data from responseFormatter wrapper
+    return { data: response.data.data };  // Wrap in data property to match frontend expectation
   } catch (error) {
     console.error('Error fetching patient details:', error);
     throw error.response?.data?.message || 'Failed to fetch patient details';

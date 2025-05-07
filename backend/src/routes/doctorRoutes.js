@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const doctorController = require('../controllers/doctorController');
+const fixController = require('../controllers/fixController');
 const auth = require('../middleware/auth');
 const roleCheck = require('../middleware/roleCheck');
 
@@ -25,7 +26,12 @@ router.get('/profile', doctorAuth, doctorController.getProfile);
 // Patient Routes
 router.get('/patients', doctorAuth, doctorController.getPatients);
 router.get('/patients/:id', doctorAuth, doctorController.getPatientDetails);
+
 router.post('/patients/:patientId/assign', doctorAuth, doctorController.assignPatientToDoctor);
+
+// New route to fix patient-doctor assignments
+router.post('/fix-patient-assignments', doctorAuth, fixController.fixPatientDoctorAssignments);
+
 
 // Prescription Routes
 router.get('/prescriptions', doctorAuth, doctorController.getPrescriptions);
@@ -36,6 +42,7 @@ router.delete('/prescriptions/:id', doctorAuth, doctorController.deletePrescript
 
 // Appointment Routes
 router.get('/appointments', doctorAuth, doctorController.getAppointments);
+router.get('/appointments/:id', doctorAuth, doctorController.getAppointmentDetails);
 router.put('/appointments/:id', doctorAuth, doctorController.updateAppointment);
 
 // Schedule Routes

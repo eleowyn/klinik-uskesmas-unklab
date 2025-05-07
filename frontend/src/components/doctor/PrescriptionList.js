@@ -90,7 +90,7 @@ const PrescriptionList = () => {
                       <div>
                         <p className="text-sm text-gray-600">
                           <i className="fas fa-user-md mr-2"></i>
-                          Dr. {prescription.doctor?.fullName || 'Not available'}
+                          Dr. {prescription.doctor?.fullName || 'Unknown Doctor'}
                         </p>
                         <p className="text-sm text-gray-600">
                           <i className="fas fa-hospital mr-2"></i>
@@ -100,7 +100,7 @@ const PrescriptionList = () => {
                       <div>
                         <p className="text-sm text-gray-600">
                           <i className="far fa-calendar-alt mr-2"></i>
-                          {new Date(prescription.date).toLocaleDateString('en-US', {
+                          {isNaN(new Date(prescription.date).getTime()) ? 'Date not available' : new Date(prescription.date).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'
@@ -108,7 +108,7 @@ const PrescriptionList = () => {
                         </p>
                         <p className="text-sm text-gray-600">
                           <i className="far fa-clock mr-2"></i>
-                          {new Date(prescription.date).toLocaleTimeString('en-US', {
+                          {isNaN(new Date(prescription.date).getTime()) ? 'Time not available' : new Date(prescription.date).toLocaleTimeString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit'
                           })}
@@ -139,15 +139,6 @@ const PrescriptionList = () => {
                       View Details
                     </Link>
                     <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => {
-                          window.open(`/doctor/prescriptions/${prescription._id}/print`, '_blank');
-                        }}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-                        title="Print Prescription"
-                      >
-                        <i className="fas fa-print"></i>
-                      </button>
                       <Link
                         to={`/doctor/prescriptions/edit/${prescription._id}`}
                         className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
