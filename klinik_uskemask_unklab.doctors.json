@@ -1,0 +1,68 @@
+[{
+  "_id": {
+    "$oid": "68173a1459bc53487678b38f"
+  },
+  "user": {
+    "$oid": "68173a1459bc53487678b38d"
+  },
+  "username": "elsherawyn",
+  "fullName": "elshera dahlan",
+  "specialization": "cardiology",
+  "no_sip": "39484958335",
+  "gender": "female",
+  "address": "tomohon",
+  "workingHours": {
+    "monday": {
+      "isWorking": true
+    },
+    "tuesday": {
+      "isWorking": true
+    },
+    "wednesday": {
+      "isWorking": true
+    },
+    "thursday": {
+      "isWorking": true
+    },
+    "friday": {
+      "isWorking": true
+    },
+    "saturday": {
+      "isWorking": false
+    },
+    "sunday": {
+      "isWorking": false
+    }
+  },
+  "specialties": [],
+  "languages": [],
+  "status": "active",
+  "appointments": [],
+  "patients": [
+    {
+      "$oid": "68174093f9107c29f4d7d2d3"
+    },
+    {
+      "$oid": "6819e9741f597be75f7b5654"
+    },
+    {
+      "$oid": "681a46e393b879688a843139"
+    },
+    {
+      "$oid": "681aac3093b879688a843362"
+    },
+    {
+      "$oid": "681ab68293b879688a844389"
+    }
+  ],
+  "prescriptions": [],
+  "qualifications": [],
+  "experience": [],
+  "createdAt": {
+    "$date": "2025-05-04T09:57:40.506Z"
+  },
+  "updatedAt": {
+    "$date": "2025-05-07T01:28:16.684Z"
+  },
+  "__v": 0
+}]

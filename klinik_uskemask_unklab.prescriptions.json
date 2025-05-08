@@ -1,0 +1,120 @@
+[{
+  "_id": {
+    "$oid": "681a3471c0dc779ac5808da9"
+  },
+  "patient": {
+    "$oid": "681a45f793b879688a842f9e"
+  },
+  "doctor": {
+    "$oid": "68173a1459bc53487678b38f"
+  },
+  "medications": [
+    {
+      "name": "decolgen",
+      "dosage": "2",
+      "frequency": "3 times",
+      "duration": "7 days",
+      "instructions": "jj",
+      "_id": {
+        "$oid": "681a3471c0dc779ac5808daa"
+      }
+    }
+  ],
+  "diagnosis": "flu",
+  "notes": "jjj",
+  "isFulfilled": false,
+  "datePrescribed": {
+    "$date": "2025-05-06T16:10:25.971Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681a424088d5c7b5fc110f0a"
+  },
+  "patient": {
+    "$oid": "68174093f9107c29f4d7d2d3"
+  },
+  "doctor": {
+    "$oid": "68173a1459bc53487678b38f"
+  },
+  "medications": [
+    {
+      "name": "paracetamol",
+      "dosage": "2",
+      "frequency": "3 times",
+      "duration": "7 days",
+      "instructions": "setelah makan",
+      "_id": {
+        "$oid": "681a424088d5c7b5fc110f0b"
+      }
+    }
+  ],
+  "diagnosis": "maag",
+  "notes": "klkl",
+  "isFulfilled": false,
+  "datePrescribed": {
+    "$date": "2025-05-06T17:09:20.884Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681aaf7293b879688a8438ae"
+  },
+  "patient": {
+    "$oid": "681a45f793b879688a842f9e"
+  },
+  "doctor": {
+    "$oid": "68173a1459bc53487678b38f"
+  },
+  "medications": [
+    {
+      "name": "decolgen",
+      "dosage": "2",
+      "frequency": "3 times",
+      "duration": "7 days",
+      "instructions": "setelah makan",
+      "_id": {
+        "$oid": "681aaf7293b879688a8438af"
+      }
+    }
+  ],
+  "diagnosis": "maag",
+  "notes": "skait",
+  "isFulfilled": false,
+  "datePrescribed": {
+    "$date": "2025-05-07T00:55:14.362Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681ab78093b879688a844559"
+  },
+  "patient": {
+    "$oid": "6819e9741f597be75f7b5654"
+  },
+  "doctor": {
+    "$oid": "68173a1459bc53487678b38f"
+  },
+  "medications": [
+    {
+      "name": "paracetamol",
+      "dosage": "2",
+      "frequency": "3 times",
+      "duration": "7 days",
+      "instructions": "setelah makan",
+      "_id": {
+        "$oid": "681ab78093b879688a84455a"
+      }
+    }
+  ],
+  "diagnosis": "panas",
+  "notes": "f",
+  "isFulfilled": false,
+  "datePrescribed": {
+    "$date": "2025-05-07T01:29:36.776Z"
+  },
+  "__v": 0
+}]
