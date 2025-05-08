@@ -22,7 +22,7 @@ const Sidebar = () => {
     <div>
       {/* Hamburger Menu for Mobile */}
       <button
-        className="md:hidden fixed top-16 left-4 z-20 bg-blue-600 text-white p-2 rounded"
+        className="md:hidden fixed top-16 left-4 z-20 bg-light-green-500 hover:bg-light-green-600 text-white p-2 rounded transition-colors duration-200"
         onClick={toggleSidebar}
       >
         {isOpen ? 'Close' : 'Menu'}
@@ -30,20 +30,20 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-16 left-0 h-full bg-gray-800 text-white w-64 transform ${
+        className={`fixed top-16 left-0 h-full bg-light-blue-500 text-white w-64 transform ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0 transition-transform duration-300 ease-in-out z-10`}
       >
         <div className="p-4">
-          <h2 className="text-lg font-semibold mb-4">Navigation</h2>
+          <h2 className="text-xl font-semibold mb-4 text-white">Navigation</h2>
           <ul className="space-y-2">
             {menuItems.map((item) => (
               <li key={item.path}>
                 <NavLink
                   to={item.path}
                   className={({ isActive }) =>
-                    `block p-2 rounded ${
-                      isActive ? 'bg-blue-500' : 'hover:bg-gray-700'
+                    `block p-2 rounded transition-colors duration-200 ${
+                      isActive ? 'bg-light-green-500 hover:bg-light-green-600' : 'hover:bg-light-blue-400'
                     }`
                   }
                   onClick={() => setIsOpen(false)} // Close sidebar on mobile click

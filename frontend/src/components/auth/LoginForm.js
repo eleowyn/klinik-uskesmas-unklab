@@ -20,33 +20,33 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Staff Login</h2>
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md border border-light-blue-200">
+      <h2 className="text-2xl font-bold mb-4 text-light-blue-700">Staff Login</h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label className="block text-gray-700">Username</label>
+          <label className="block text-light-blue-600">Username</label>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border border-light-blue-200 rounded focus:ring-2 focus:ring-light-blue-400 focus:border-light-blue-400"
             required
           />
         </div>
         <div className="mb-4">
-          <label className="block text-gray-700">Password</label>
+          <label className="block text-light-blue-600">Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border border-light-blue-200 rounded focus:ring-2 focus:ring-light-blue-400 focus:border-light-blue-400"
             required
           />
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+          className="w-full bg-light-green-500 text-white p-2 rounded hover:bg-light-green-600 focus:ring-2 focus:ring-light-green-400 focus:ring-offset-2 transition-colors duration-200"
         >
           Login
         </button>

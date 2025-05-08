@@ -12,7 +12,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-blue-600 text-white p-4 shadow-md fixed w-full top-0 z-10">
+    <nav className="bg-light-blue-600 text-white p-4 shadow-lg fixed w-full top-0 z-10">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center">
           <img
@@ -28,7 +28,7 @@ const Navbar = () => {
             <span className="text-sm">Welcome, {user.username}</span>
             <button
               onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm"
+            className="bg-light-green-500 hover:bg-light-green-600 px-4 py-2 rounded text-sm font-medium transition-colors duration-200 focus:ring-2 focus:ring-light-green-400 focus:ring-offset-2"
             >
               Logout
             </button>
