@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const prescriptionService = require('../services/prescriptionService');
 
 class PrescriptionController {
@@ -26,9 +27,21 @@ class PrescriptionController {
   async getById(req, res) {
     console.log('Fetching prescription by ID:', req.params.id); // Tambahkan log
     try {
-      const prescription = await prescriptionService.getByIdWithDetails(req.params.id);
+      const id = req.params.id;
+
+      // Validasi ID
+      if (!id || id === 'undefined') {
+        return res.status(400).json({ message: 'Valid prescription ID is required' });
+      }
+
+      // Validasi format ObjectId
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid prescription ID format' });
+      }
+
+      const prescription = await prescriptionService.getByIdWithDetails(id);
       if (!prescription) {
-        console.log('Prescription not found with ID:', req.params.id); // Tambahkan log
+        console.log('Prescription not found with ID:', id); // Tambahkan log
         return res.status(404).json({ message: 'Prescription not found' });
       }
       res.json(prescription);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import transactionService from '../../services/transactionService';
+import transactionService from '../services/transactionService';
+
 
 const TransactionForm = () => {
   const { id } = useParams();
@@ -70,16 +71,16 @@ const TransactionForm = () => {
 
   return (
     <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md mt-10">
-      <h2 className="text-2xl font-bold mb-6">{id ? 'Edit Transaction' : 'Add Transaction'}</h2>
+      <h2 className="text-2xl font-bold mb-6 text-light-green-700">{id ? 'Edit Transaction' : 'Add Transaction'}</h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-gray-700">Patient</label>
+          <label className="block text-light-blue-700 font-semibold">Patient</label>
           <select
             name="patientId"
             value={formData.patientId}
             onChange={handleChange}
-            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-light-blue-400 focus:border-light-blue-400"
             required
           >
             <option value="">Select Patient</option>
@@ -91,12 +92,12 @@ const TransactionForm = () => {
           </select>
         </div>
         <div>
-          <label className="block text-gray-700">Medical Record</label>
+          <label className="block text-light-blue-700 font-semibold">Medical Record</label>
           <select
             name="medicalRecordId"
             value={formData.medicalRecordId}
             onChange={handleChange}
-            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-light-blue-400 focus:border-light-blue-400"
             required
           >
             <option value="">Select Medical Record</option>
@@ -108,24 +109,24 @@ const TransactionForm = () => {
           </select>
         </div>
         <div>
-          <label className="block text-gray-700">Amount</label>
+          <label className="block text-light-blue-700 font-semibold">Amount</label>
           <input
             type="number"
             name="amount"
             value={formData.amount}
             onChange={handleChange}
-            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-light-blue-400 focus:border-light-blue-400"
             required
             step="0.01"
           />
         </div>
         <div>
-          <label className="block text-gray-700">Payment Status</label>
+          <label className="block text-light-blue-700 font-semibold">Payment Status</label>
           <select
             name="paymentStatus"
             value={formData.paymentStatus}
             onChange={handleChange}
-            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-light-blue-400 focus:border-light-blue-400"
             required
           >
             <option value="">Select Status</option>
@@ -135,12 +136,12 @@ const TransactionForm = () => {
           </select>
         </div>
         <div>
-          <label className="block text-gray-700">Payment Method</label>
+          <label className="block text-light-blue-700 font-semibold">Payment Method</label>
           <select
             name="paymentMethod"
             value={formData.paymentMethod}
             onChange={handleChange}
-            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-light-blue-400 focus:border-light-blue-400"
             required
           >
             <option value="">Select Method</option>
@@ -150,13 +151,13 @@ const TransactionForm = () => {
           </select>
         </div>
         <div>
-          <label className="block text-gray-700">Transaction Date</label>
+          <label className="block text-light-blue-700 font-semibold">Transaction Date</label>
           <input
             type="date"
             name="transactionDate"
             value={formData.transactionDate}
             onChange={handleChange}
-            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-light-blue-400 focus:border-light-blue-400"
             required
           />
         </div>
@@ -164,7 +165,7 @@ const TransactionForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:bg-blue-300 cursor-pointer"
+            className="bg-light-green-500 text-white px-4 py-2 rounded hover:bg-light-green-600 focus:outline-none focus:ring-2 focus:ring-light-green-400 focus:ring-offset-1 disabled:bg-light-green-300 cursor-pointer"
           >
             {loading ? 'Saving...' : id ? 'Update' : 'Create'}
           </button>

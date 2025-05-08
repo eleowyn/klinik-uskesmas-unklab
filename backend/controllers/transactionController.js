@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const transactionService = require('../services/transactionService');
 
 class TransactionController {
@@ -106,5 +107,3 @@ class TransactionController {
 }
 
 module.exports = new TransactionController();
-
-
