@@ -19,34 +19,36 @@ const Sidebar = () => {
   if (!user) return null;
 
   return (
-    <div>
-      {/* Hamburger Menu for Mobile */}
-      <button
-        className="md:hidden fixed top-16 left-4 z-20 bg-light-green-500 hover:bg-light-green-600 text-white p-2 rounded transition-colors duration-200"
-        onClick={toggleSidebar}
-      >
-        {isOpen ? 'Close' : 'Menu'}
-      </button>
-
+    <div className="relative">
       {/* Sidebar */}
       <div
-        className={`fixed top-16 left-0 h-full bg-light-blue-500 text-white w-64 transform ${
+        className={`fixed top-12 left-0 h-[calc(100vh-48px)] bg-light-blue-500 text-white w-64 transform ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 transition-transform duration-300 ease-in-out z-10`}
+        } md:translate-x-0 transition-transform duration-300 ease-in-out z-10 shadow-lg`}
       >
-        <div className="p-4">
-          <h2 className="text-xl font-semibold mb-4 text-white">Navigation</h2>
-          <ul className="space-y-2">
+        <div className="p-6">
+          <div className="md:hidden mb-4">
+            <button
+              className="w-full bg-light-green-500 hover:bg-light-green-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+              onClick={toggleSidebar}
+            >
+              ☰ Menu
+            </button>
+          </div>
+          <h2 className="text-lg font-semibold mb-6 text-white tracking-wide">Navigation</h2>
+          <ul className="space-y-3">
             {menuItems.map((item) => (
               <li key={item.path}>
                 <NavLink
                   to={item.path}
                   className={({ isActive }) =>
-                    `block p-2 rounded transition-colors duration-200 ${
-                      isActive ? 'bg-light-green-500 hover:bg-light-green-600' : 'hover:bg-light-blue-400'
+                    `flex items-center px-4 py-2 rounded-md transition-colors duration-200 ${
+                      isActive 
+                        ? 'bg-light-green-500 hover:bg-light-green-600 font-medium' 
+                        : 'hover:bg-light-blue-400'
                     }`
                   }
-                  onClick={() => setIsOpen(false)} // Close sidebar on mobile click
+                  onClick={() => setIsOpen(false)}
                 >
                   {item.label}
                 </NavLink>

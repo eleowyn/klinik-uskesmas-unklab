@@ -12,16 +12,10 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-light-blue-600 text-white p-4 shadow-lg fixed w-full top-0 z-10">
-      <div className="container mx-auto flex justify-between items-center">
-        <div className="flex items-center">
-          <img
-            src="/logo.png"
-            alt="Clinic Logo"
-            className="h-8 w-8 mr-2"
-            onError={(e) => (e.target.src = 'https://via.placeholder.com/32')}
-          />
-          <span className="text-xl font-bold">Clinic App</span>
+    <nav className="bg-light-blue-500 text-white fixed w-full top-0 z-10">
+      <div className="container mx-auto flex justify-between items-center px-6 py-3">
+        <div className="flex items-center space-x-3">
+          <span className="text-2xl font-bold tracking-wide">Clinic App</span>
         </div>
         {user && (
           <div className="flex items-center space-x-4">
