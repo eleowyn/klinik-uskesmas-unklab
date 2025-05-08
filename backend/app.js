@@ -5,7 +5,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-app.use(express.json());
 
 const corsOptions = {
   origin: 'http://localhost:3000', // Ganti dengan origin frontend Anda
@@ -15,6 +14,8 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+app.use(express.json());
 
 const PORT = process.env.PORT 
 mongoose.connect(process.env.MONGO_URI)

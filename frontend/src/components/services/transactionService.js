@@ -2,8 +2,13 @@ import api from './api';
 
 const transactionService = {
   getAll: async () => {
-    const response = await api.get('/transactions');
-    return response.data;
+    try {
+      const response = await api.get('/transactions');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching transactions:', error); // Tambahkan log error di sini
+      throw error; // Re-throw error agar ditangkap di komponen
+    }
   },
 
   getById: async (id) => {

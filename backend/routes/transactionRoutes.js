@@ -4,6 +4,7 @@ const transactionController = require('../controllers/transactionController');
 const auth = require('../middleware/auth');
 
 // Protected routes (require JWT authentication)
+router.get('/transactions', auth, transactionController.getAll);
 router.post('/', auth, transactionController.create);
 router.get('/', auth, transactionController.getAll);
 router.get('/:id', auth, transactionController.getById);

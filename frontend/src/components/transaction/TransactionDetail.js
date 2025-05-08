@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import transactionService from '../../services/transactionService';
 
@@ -33,43 +33,43 @@ const TransactionDetail = () => {
       <div className="space-y-4">
         <div>
           <label className="block text-gray-700 font-semibold">Patient</label>
-          <p>{transaction.patientId.fullName}</p>
+          <p className="text-gray-900">{transaction.patientId.fullName}</p>
         </div>
         <div>
           <label className="block text-gray-700 font-semibold">Medical Record</label>
-          <p>{transaction.medicalRecordId.diagnosis}</p>
+          <p className="text-gray-900">{transaction.medicalRecordId.diagnosis}</p>
         </div>
         <div>
           <label className="block text-gray-700 font-semibold">Amount</label>
-          <p>${transaction.amount.toFixed(2)}</p>
+          <p className="text-gray-900">${transaction.amount.toFixed(2)}</p>
         </div>
         <div>
           <label className="block text-gray-700 font-semibold">Payment Status</label>
-          <p>{transaction.paymentStatus.charAt(0).toUpperCase() + transaction.paymentStatus.slice(1)}</p>
+          <p className="text-gray-900">{transaction.paymentStatus.charAt(0).toUpperCase() + transaction.paymentStatus.slice(1)}</p>
         </div>
         <div>
           <label className="block text-gray-700 font-semibold">Payment Method</label>
-          <p>{transaction.paymentMethod.charAt(0).toUpperCase() + transaction.paymentMethod.slice(1)}</p>
+          <p className="text-gray-900">{transaction.paymentMethod.charAt(0).toUpperCase() + transaction.paymentMethod.slice(1)}</p>
         </div>
         <div>
           <label className="block text-gray-700 font-semibold">Transaction Date</label>
-          <p>{new Date(transaction.transactionDate).toLocaleDateString()}</p>
+          <p className="text-gray-900">{new Date(transaction.transactionDate).toLocaleDateString()}</p>
         </div>
         <div>
           <label className="block text-gray-700 font-semibold">Created At</label>
-          <p>{new Date(transaction.createdAt).toLocaleString()}</p>
+          <p className="text-gray-900">{new Date(transaction.createdAt).toLocaleString()}</p>
         </div>
       </div>
       <div className="mt-6 flex space-x-4">
         <button
           onClick={() => navigate(`/transactions/edit/${id}`)}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
         >
           Edit
         </button>
         <button
           onClick={() => navigate('/transactions')}
-          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1"
         >
           Back
         </button>

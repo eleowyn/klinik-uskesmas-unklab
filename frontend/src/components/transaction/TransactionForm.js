@@ -79,7 +79,7 @@ const TransactionForm = () => {
             name="patientId"
             value={formData.patientId}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             required
           >
             <option value="">Select Patient</option>
@@ -96,7 +96,7 @@ const TransactionForm = () => {
             name="medicalRecordId"
             value={formData.medicalRecordId}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             required
           >
             <option value="">Select Medical Record</option>
@@ -114,7 +114,7 @@ const TransactionForm = () => {
             name="amount"
             value={formData.amount}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             required
             step="0.01"
           />
@@ -125,7 +125,7 @@ const TransactionForm = () => {
             name="paymentStatus"
             value={formData.paymentStatus}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             required
           >
             <option value="">Select Status</option>
@@ -140,7 +140,7 @@ const TransactionForm = () => {
             name="paymentMethod"
             value={formData.paymentMethod}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             required
           >
             <option value="">Select Method</option>
@@ -156,7 +156,7 @@ const TransactionForm = () => {
             name="transactionDate"
             value={formData.transactionDate}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             required
           />
         </div>
@@ -164,14 +164,14 @@ const TransactionForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:bg-blue-300 cursor-pointer"
           >
             {loading ? 'Saving...' : id ? 'Update' : 'Create'}
           </button>
           <button
             type="button"
             onClick={() => navigate('/transactions')}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 cursor-pointer"
           >
             Cancel
           </button>

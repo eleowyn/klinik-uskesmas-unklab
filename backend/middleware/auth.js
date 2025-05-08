@@ -5,6 +5,7 @@ module.exports = (req, res, next) => {
   if (!authHeader) {
     console.error('No Authorization header provided');
     return res.status(401).json({ message: 'No token provided' });
+    
   }
 
   const token = authHeader.replace('Bearer ', '');
@@ -18,6 +19,7 @@ module.exports = (req, res, next) => {
     console.log('Authenticated user:', { id: decoded.id, role: decoded.role });
     req.user = decoded;
     next();
+    console.log('Auth middleware passed, calling next()'); // Tambahkan log ini
   } catch (error) {
     console.error('Auth error:', error.message, error.stack);
     if (error.name === 'TokenExpiredError') {

@@ -21,8 +21,6 @@ const PrescriptionForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('Mengambil data untuk ID:', id);
-        console.log('Pengguna saat ini:', user);
         const [recordData, doctorData] = await Promise.all([
           prescriptionService.getMedicalRecords(),
           prescriptionService.getDoctors(),
@@ -40,7 +38,6 @@ const PrescriptionForm = () => {
           });
         }
       } catch (err) {
-        console.error('Gagal mengambil data:', err.message);
         setError(`Gagal mengambil data: ${err.message}`);
       }
     };
@@ -80,27 +77,22 @@ const PrescriptionForm = () => {
     setLoading(true);
     setError('');
     try {
-      console.log('Mengirimkan data formulir:', formData);
-      console.log('Token yang digunakan:', localStorage.getItem('token'));
       if (id) {
-        console.log('Memperbarui resep dengan ID:', id);
         await prescriptionService.update(id, formData);
       } else {
-        console.log('Membuat resep baru');
         await prescriptionService.create(formData);
       }
       navigate('/prescriptions');
     } catch (err) {
-      console.error('Gagal menyimpan resep:', err.message, err.response?.data);
       setError(`Gagal menyimpan resep: ${err.message}`);
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6 bg-white rounded-lg shadow-md mt-10">
-      <h2 className="text-2xl font-bold mb-6">{id ? 'Edit Resep' : 'Tambah Resep'}</h2>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+    <div className="max-w-lg mx-auto p-8 bg-gray-50 rounded-lg shadow-md mt-10">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">{id ? 'Edit Resep' : 'Tambah Resep'}</h2>
+      {error && <p className="text-red-600 mb-4">{error}</p>}
       <div className="space-y-4">
         <div>
           <label className="block text-gray-700">Catatan Medis</label>
@@ -108,7 +100,7 @@ const PrescriptionForm = () => {
             name="medicalRecordId"
             value={formData.medicalRecordId}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           >
             <option value="">Pilih Catatan Medis</option>
@@ -125,7 +117,7 @@ const PrescriptionForm = () => {
             name="doctorId"
             value={formData.doctorId}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           >
             <option value="">Pilih Dokter</option>
@@ -139,7 +131,7 @@ const PrescriptionForm = () => {
         <div>
           <label className="block text-gray-700">Obat-obatan</label>
           {formData.medications.map((med, index) => (
-            <div key={index} className="border p-4 mb-2 rounded">
+            <div key={index} className="border p-4 mb-2 rounded bg-white shadow-sm">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-gray-700">Nama</label>
@@ -148,7 +140,7 @@ const PrescriptionForm = () => {
                     name={`medications.name`}
                     value={med.name}
                     onChange={(e) => handleChange(e, index)}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
@@ -159,7 +151,7 @@ const PrescriptionForm = () => {
                     name={`medications.dosage`}
                     value={med.dosage}
                     onChange={(e) => handleChange(e, index)}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
@@ -170,7 +162,7 @@ const PrescriptionForm = () => {
                     name={`medications.frequency`}
                     value={med.frequency}
                     onChange={(e) => handleChange(e, index)}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
@@ -181,7 +173,7 @@ const PrescriptionForm = () => {
                     name={`medications.duration`}
                     value={med.duration}
                     onChange={(e) => handleChange(e, index)}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
@@ -190,7 +182,7 @@ const PrescriptionForm = () => {
                 <button
                   type="button"
                   onClick={() => removeMedication(index)}
-                  className="mt-2 text-red-500 hover:text-red-700"
+                  className="mt-2 text-red-600 hover:text-red-700"
                 >
                   Hapus
                 </button>
@@ -200,7 +192,7 @@ const PrescriptionForm = () => {
           <button
             type="button"
             onClick={addMedication}
-            className="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+            className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           >
             Tambah Obat
           </button>
@@ -212,7 +204,7 @@ const PrescriptionForm = () => {
             name="issueDate"
             value={formData.issueDate}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
         </div>

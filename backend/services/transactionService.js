@@ -38,7 +38,15 @@ class TransactionService {
   }
 
   async findAll() {
-    return await transactionRepository.findAll();
+    console.log('TransactionService: findAll() called');
+    try {
+      const transactions = await transactionRepository.findAll();
+      console.log('TransactionService: findAll() result:', transactions);
+      return transactions;
+    } catch (error) {
+      console.error('TransactionService: findAll() error:', error);
+      throw error;
+    }
   }
 
   async update(id, updateData) {

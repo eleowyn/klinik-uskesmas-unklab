@@ -34,18 +34,18 @@ const PrescriptionDetail = () => {
       <div className="space-y-4">
         <div>
           <label className="block text-gray-700 font-semibold">Medical Record</label>
-          <p>
+          <p className="text-gray-900">
             {prescription.medicalRecordId.patientId.fullName} -{' '}
             {prescription.medicalRecordId.diagnosis}
           </p>
         </div>
         <div>
           <label className="block text-gray-700 font-semibold">Doctor</label>
-          <p>{prescription.doctorId.username}</p>
+          <p className="text-gray-900">{prescription.doctorId.username}</p>
         </div>
         <div>
           <label className="block text-gray-700 font-semibold">Medications</label>
-          <ul className="list-disc pl-5">
+          <ul className="list-disc pl-5 text-gray-900">
             {prescription.medications.map((med, index) => (
               <li key={index}>
                 {med.name} - {med.dosage}, {med.frequency} for {med.duration}
@@ -55,23 +55,23 @@ const PrescriptionDetail = () => {
         </div>
         <div>
           <label className="block text-gray-700 font-semibold">Issue Date</label>
-          <p>{new Date(prescription.issueDate).toLocaleDateString()}</p>
+          <p className="text-gray-900">{new Date(prescription.issueDate).toLocaleDateString()}</p>
         </div>
         <div>
           <label className="block text-gray-700 font-semibold">Created At</label>
-          <p>{new Date(prescription.createdAt).toLocaleString()}</p>
+          <p className="text-gray-900">{new Date(prescription.createdAt).toLocaleString()}</p>
         </div>
       </div>
       <div className="mt-6 flex space-x-4">
         <button
           onClick={() => navigate(`/prescriptions/edit/${id}`)}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
         >
           Edit
         </button>
         <button
           onClick={() => navigate('/prescriptions')}
-          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1"
         >
           Back
         </button>

@@ -11,19 +11,47 @@ class TransactionController {
     }
   }
 
+  
+  
+
   async getAll(req, res) {
     try {
+      console.log('TransactionController.getAll() called');
       const transactions = await transactionService.findAll();
-      console.log('Transactions data:', transactions)
       res.json(transactions);
     } catch (error) {
+      console.error('Error fetching transactions:', error);
       res.status(500).json({ message: error.message });
     }
   }
 
+  // async getById(req, res) {
+  //   try {
+  //     const transaction = await transactionService.findById(req.params.id);
+  //     if (!transaction) {
+  //       return res.status(404).json({ message: 'Transaction not found' });
+  //     }
+  //     res.json(transaction);
+  //   } catch (error) {
+  //     res.status(500).json({ message: error.message });
+  //   }
+  // }
+
   async getById(req, res) {
     try {
-      const transaction = await transactionService.findById(req.params.id);
+      const id = req.params.id;
+      
+      // Validasi ID
+      if (!id || id === 'undefined') {
+        return res.status(400).json({ message: 'Valid transaction ID is required' });
+      }
+      
+      // Validasi format ObjectId
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid transaction ID format' });
+      }
+      
+      const transaction = await transactionService.findById(id);
       if (!transaction) {
         return res.status(404).json({ message: 'Transaction not found' });
       }
@@ -31,6 +59,16 @@ class TransactionController {
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
+  }
+
+  async findById(id) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error('Valid transaction ID is required');
+    }
+    
+    return await Transaction.findById(id)
+      .populate('patientId', 'fullName')
+      .populate('medicalRecordId', 'diagnosis');
   }
 
   async getByPatientId(req, res) {
@@ -68,3 +106,5 @@ class TransactionController {
 }
 
 module.exports = new TransactionController();
+
+
