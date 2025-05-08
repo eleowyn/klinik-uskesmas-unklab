@@ -1,0 +1,64 @@
+[{
+  "_id": {
+    "$oid": "68174050f9107c29f4d7d2a8"
+  },
+  "user": {
+    "$oid": "68174050f9107c29f4d7d2a6"
+  },
+  "fullName": "lana londah",
+  "position": "nurse",
+  "phone": "087762636165",
+  "username": "lanasln",
+  "gender": "female",
+  "address": "tomohon",
+  "workingHours": {
+    "monday": {
+      "isWorking": true
+    },
+    "tuesday": {
+      "isWorking": true
+    },
+    "wednesday": {
+      "isWorking": true
+    },
+    "thursday": {
+      "isWorking": true
+    },
+    "friday": {
+      "isWorking": true
+    },
+    "saturday": {
+      "isWorking": false
+    },
+    "sunday": {
+      "isWorking": false
+    }
+  },
+  "status": "active",
+  "permissions": [],
+  "transactions": [
+    {
+      "$oid": "681a3274c0dc779ac5808991"
+    },
+    {
+      "$oid": "681a468193b879688a8430ee"
+    },
+    {
+      "$oid": "681aade893b879688a84359a"
+    },
+    {
+      "$oid": "681ab71f93b879688a8444b4"
+    }
+  ],
+  "appointments": [],
+  "joinDate": {
+    "$date": "2025-05-04T10:24:16.970Z"
+  },
+  "createdAt": {
+    "$date": "2025-05-04T10:24:16.971Z"
+  },
+  "updatedAt": {
+    "$date": "2025-05-07T01:27:59.080Z"
+  },
+  "__v": 0
+}]

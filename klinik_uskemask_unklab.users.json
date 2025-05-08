@@ -1,0 +1,39 @@
+[{
+  "_id": {
+    "$oid": "68173a1459bc53487678b38d"
+  },
+  "email": "elshera@gmail.com",
+  "password": "$2a$10$Dghh8mgCIJZuU1cn0mX80u8Hp9.6TmlR4pg5ZsDIa5i/mtfk2doVm",
+  "role": "doctor",
+  "isActive": true,
+  "createdAt": {
+    "$date": "2025-05-04T09:57:40.361Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68174050f9107c29f4d7d2a6"
+  },
+  "email": "lana@staff.ac.id.com",
+  "password": "$2a$10$wA.ht564krbnJtoRd1hvxOCqtqGDRpF3VFSXliH26wH1JAwBciRY.",
+  "role": "staff",
+  "isActive": true,
+  "createdAt": {
+    "$date": "2025-05-04T10:24:16.894Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681a2b7cc0dc779ac5808694"
+  },
+  "email": "elsheraa@staff.gmail.com",
+  "password": "$2a$10$sc1U5z7gyT9WNuormzQBUOVdMoIsySKdrozrflJ.ccxzC52h.5PeO",
+  "role": "staff",
+  "isActive": true,
+  "createdAt": {
+    "$date": "2025-05-06T15:32:12.940Z"
+  },
+  "__v": 0
+}]

@@ -1,0 +1,165 @@
+[{
+  "_id": {
+    "$oid": "68174093f9107c29f4d7d2d3"
+  },
+  "doctors": [
+    {
+      "$oid": "68173a1459bc53487678b38f"
+    }
+  ],
+  "fullName": "elshera amazing ",
+  "dateOfBirth": {
+    "$date": "2025-05-01T00:00:00.000Z"
+  },
+  "gender": "female",
+  "address": "tomohon",
+  "phoneNumber": "34534646",
+  "email": "elsheraa@gmail.com",
+  "bloodType": "unknown",
+  "allergies": "none",
+  "medicalHistory": "none",
+  "emergencyContact": {
+    "name": "mama",
+    "relationship": "mother"
+  },
+  "lastVisit": null,
+  "createdAt": {
+    "$date": "2025-05-04T10:25:23.394Z"
+  },
+  "updatedAt": {
+    "$date": "2025-05-04T10:25:23.397Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6819e9741f597be75f7b5654"
+  },
+  "doctors": [
+    {
+      "$oid": "68173a1459bc53487678b38f"
+    }
+  ],
+  "fullName": "lana londah",
+  "dateOfBirth": {
+    "$date": "2017-01-31T00:00:00.000Z"
+  },
+  "gender": "female",
+  "address": "manado",
+  "phoneNumber": "594539",
+  "email": "lana@staff.ac.id.com",
+  "bloodType": "unknown",
+  "allergies": "fff",
+  "medicalHistory": "fflu",
+  "emergencyContact": {
+    "name": "mama",
+    "relationship": "mother"
+  },
+  "lastVisit": null,
+  "createdAt": {
+    "$date": "2025-05-06T10:50:28.833Z"
+  },
+  "updatedAt": {
+    "$date": "2025-05-06T10:50:28.835Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681a46e393b879688a843139"
+  },
+  "doctors": [
+    {
+      "$oid": "68173a1459bc53487678b38f"
+    }
+  ],
+  "fullName": "elshera dahlan",
+  "dateOfBirth": {
+    "$date": "2025-05-01T00:00:00.000Z"
+  },
+  "gender": "female",
+  "address": "tomohon",
+  "phoneNumber": "594539",
+  "email": "elshera@gmail.com",
+  "bloodType": "unknown",
+  "allergies": "none",
+  "medicalHistory": "none",
+  "emergencyContact": {
+    "name": "jh",
+    "relationship": "mother"
+  },
+  "lastVisit": null,
+  "createdAt": {
+    "$date": "2025-05-06T17:29:07.794Z"
+  },
+  "updatedAt": {
+    "$date": "2025-05-06T17:29:07.797Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681aac3093b879688a843362"
+  },
+  "doctors": [
+    {
+      "$oid": "68173a1459bc53487678b38f"
+    }
+  ],
+  "fullName": "kania",
+  "dateOfBirth": {
+    "$date": "2025-05-07T00:00:00.000Z"
+  },
+  "gender": "female",
+  "address": "jasmine",
+  "phoneNumber": "34534646",
+  "email": "s22310566@student.unklab.ac.id",
+  "bloodType": "unknown",
+  "allergies": "gatalgatal",
+  "medicalHistory": "none",
+  "emergencyContact": {
+    "name": "mama",
+    "relationship": "mother"
+  },
+  "lastVisit": null,
+  "createdAt": {
+    "$date": "2025-05-07T00:41:20.475Z"
+  },
+  "updatedAt": {
+    "$date": "2025-05-07T00:41:20.476Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "681ab68293b879688a844389"
+  },
+  "doctors": [
+    {
+      "$oid": "68173a1459bc53487678b38f"
+    }
+  ],
+  "fullName": "nadya",
+  "dateOfBirth": {
+    "$date": "2025-05-01T00:00:00.000Z"
+  },
+  "gender": "female",
+  "address": "tomohon",
+  "phoneNumber": "34534646",
+  "email": "nadyapagiling176@gmail.com",
+  "bloodType": "unknown",
+  "allergies": "gatal gatal",
+  "medicalHistory": "none",
+  "emergencyContact": {
+    "name": "mama",
+    "relationship": "mother"
+  },
+  "lastVisit": null,
+  "createdAt": {
+    "$date": "2025-05-07T01:25:22.221Z"
+  },
+  "updatedAt": {
+    "$date": "2025-05-07T01:25:22.222Z"
+  },
+  "__v": 0
+}]
